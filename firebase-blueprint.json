@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "Stores user profile and role information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier for the user." },
+        "email": { "type": "string", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "description": "The user's profile photo URL." },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "The user's role in the application." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "email"]
+    },
+    "lessonPlans": {
+      "title": "Lesson Plan",
+      "description": "Stores generated lesson plans.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique identifier for the lesson plan." },
+        "authorId": { "type": "string", "description": "The UID of the user who created the plan." },
+        "authorEmail": { "type": "string", "description": "The email of the user who created the plan." },
+        "teacherName": { "type": "string" },
+        "className": { "type": "string" },
+        "subject": { "type": "string" },
+        "month": { "type": "string" },
+        "week": { "type": "string" },
+        "day": { "type": "string" },
+        "topic": { "type": "string" },
+        "unitsRequired": { "type": "string" },
+        "date": { "type": "string" },
+        "medium": { "type": "string", "enum": ["Urdu", "English"] },
+        "elos": { "type": "string" },
+        "resources": { "type": "string" },
+        "warmUpActivity": { "type": "string" },
+        "softSkills": { "type": "string" },
+        "deliveryProcedure": { "type": "string" },
+        "evaluation": { "type": "string" },
+        "homeWork": { "type": "string" },
+        "reflection": { "type": "string" },
+        "duration": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["authorId", "topic", "className", "subject"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "users",
+      "description": "User profile documents."
+    },
+    "/lessonPlans/{planId}": {
+      "schema": "lessonPlans",
+      "description": "Lesson plan documents."
+    }
+  }
+}

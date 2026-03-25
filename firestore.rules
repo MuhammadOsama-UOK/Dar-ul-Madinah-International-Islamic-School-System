@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: uid
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string
+    //   - photoURL: string
+    //   - role: string (enum: admin, user)
+    //   - createdAt: timestamp
+    //
+    // Collection: lessonPlans
+    // Document ID: planId
+    // Fields:
+    //   - id: string
+    //   - authorId: string (required)
+    //   - authorEmail: string
+    //   - teacherName: string
+    //   - className: string
+    //   - subject: string
+    //   - month: string
+    //   - week: string
+    //   - day: string
+    //   - topic: string
+    //   - unitsRequired: string
+    //   - date: string
+    //   - medium: string
+    //   - elos: string
+    //   - resources: string
+    //   - warmUpActivity: string
+    //   - softSkills: string
+    //   - deliveryProcedure: string
+    //   - evaluation: string
+    //   - homeWork: string
+    //   - reflection: string
+    //   - duration: string
+    //   - createdAt: timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == "osamajafar5070@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isValidUser(data) {
+      return data.uid is string &&
+             data.email is string &&
+             data.email.size() < 512;
+    }
+
+    function isValidLessonPlan(data) {
+      return data.authorId == request.auth.uid &&
+             data.topic is string &&
+             data.className is string &&
+             data.subject is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isAuthenticated() && (isOwner(uid) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(uid) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (isOwner(uid) || isAdmin()) && isValidUser(request.resource.data);
+    }
+
+    match /lessonPlans/{planId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.authorId || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid && isValidLessonPlan(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin()) && isValidLessonPlan(request.resource.data);
+      allow delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+  }
+}
