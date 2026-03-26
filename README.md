@@ -1,20 +1,28 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Dar-ul-Madinah Lesson Planner Deployment Guide
 
-# Run and deploy your AI Studio app
+This project is a full-stack React application (Vite + Express) designed to be deployed on Vercel.
 
-This contains everything you need to run your app locally.
+## Deployment Steps
 
-View your app in AI Studio: https://ai.studio/apps/72c53d66-dffa-4fe7-b4ed-bf9167cad5dd
+### 1. Firebase Configuration
+Ensure your Firebase project is correctly configured:
+- **Authorized Domains**: Go to **Firebase Console > Authentication > Settings > Authorized Domains** and add your Vercel deployment domain (e.g., `dar-ul-madinah-international-islamic-school-system-8y2mje5ci.vercel.app`). **This is required for Google Sign-in to work.**
 
-## Run Locally
+### 2. Vercel Environment Variables
+Add the following environment variables in your Vercel Dashboard (**Settings > Environment Variables**):
 
-**Prerequisites:**  Node.js
+| Variable | Description |
+|----------|-------------|
+| `GEMINI_API_KEY` | Your Google Gemini API Key. |
+| `NODE_ENV` | Set to `production`. |
 
+### 3. Local Setup
+If you want to run the project locally:
+1. Install dependencies: `npm install`
+2. Create a `.env` file with your `GEMINI_API_KEY`.
+3. Start the dev server: `npm run dev`
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Project Structure
+- `server.ts`: Express server handling Gemini API calls and serving the frontend.
+- `src/`: React frontend source code.
+- `firebase-applet-config.json`: Firebase configuration (ensure this is correct).

@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
 import { 
   FileText, 
   Download, 
@@ -193,16 +192,9 @@ export default function App() {
   };
 
   const generateLessonPlan = async () => {
-    if (!currentUser) {
-      setError("Please sign in to generate lesson plans.");
-      return;
-    }
     setIsGenerating(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      const model = "gemini-3-flash-preview";
-      
       const units = parseInt(formData.unitsRequired) || 1;
       const totalMinutes = units * 35;
       const durationStr = `${totalMinutes} Minutes (${units} Unit${units > 1 ? 's' : ''})`;
@@ -253,28 +245,33 @@ export default function App() {
         }
       `;
 
-      const response = await ai.models.generateContent({
-        model,
-        contents: [{ parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: "application/json",
-        }
+      const response = await fetch("/api/generate-lesson-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
       });
 
-      const result = JSON.parse(response.text || '{}');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate lesson plan.");
+      }
+
+      const result = await response.json();
       const planWithMetadata = { 
         ...result, 
         medium: formData.medium,
-        authorId: currentUser.uid,
-        authorEmail: currentUser.email,
+        authorId: currentUser?.uid || 'guest',
+        authorEmail: currentUser?.email || 'guest',
         createdAt: Timestamp.now()
       };
       
-      // Save to Firestore
-      try {
-        await addDoc(collection(db, 'lessonPlans'), planWithMetadata);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.CREATE, 'lessonPlans');
+      // Save to Firestore only if logged in
+      if (currentUser) {
+        try {
+          await addDoc(collection(db, 'lessonPlans'), planWithMetadata);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.CREATE, 'lessonPlans');
+        }
       }
       
       setGeneratedPlan(planWithMetadata);
@@ -282,7 +279,6 @@ export default function App() {
     } catch (err) {
       console.error("Generation error:", err);
       setError("Failed to generate lesson plan. Please try again.");
-      handleFirestoreError(err, OperationType.CREATE, 'lessonPlans');
     } finally {
       setIsGenerating(false);
     }
@@ -321,32 +317,7 @@ export default function App() {
     );
   }
 
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 rounded-3xl border border-blue-100 shadow-2xl max-w-md w-full text-center"
-        >
-          <div className="w-20 h-20 bg-blue-900 rounded-full flex items-center justify-center text-white mx-auto mb-6 shadow-lg">
-            <Layers size={40} />
-          </div>
-          <h1 className="text-2xl font-bold text-blue-900 mb-2">DAR-UL-MADINAH</h1>
-          <p className="text-slate-500 mb-8">Sign in to access the Lesson Planner and manage your plans securely.</p>
-          <button
-            onClick={signInWithGoogle}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 py-3.5 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-            Sign in with Google
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (showAdminPanel && currentUser.email === ADMIN_EMAIL) {
+  if (showAdminPanel && currentUser?.email === ADMIN_EMAIL) {
     const filteredPlans = adminFilterClass 
       ? allPlans.filter(p => p.className?.toLowerCase().includes(adminFilterClass.toLowerCase()))
       : allPlans;
@@ -963,8 +934,28 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-7xl mx-auto px-4 py-12 border-t border-blue-100 mt-12 text-center text-slate-500 text-sm">
+      <footer className="max-w-7xl mx-auto px-4 py-12 border-t border-blue-100 mt-12 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm gap-4">
         <p>© 2026 Dar-ul-Madinah International Islamic School System. All rights reserved.</p>
+        <div className="flex items-center gap-6">
+          {currentUser ? (
+            <div className="flex items-center gap-4">
+              <span className="text-xs">Logged in as {currentUser.email}</span>
+              <button 
+                onClick={logout}
+                className="text-xs hover:text-blue-600 transition-colors flex items-center gap-1"
+              >
+                <LogOut size={12} /> Logout
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={signInWithGoogle}
+              className="text-xs hover:text-blue-600 transition-colors flex items-center gap-1 opacity-60 hover:opacity-100"
+            >
+              <Shield size={12} /> Admin Login
+            </button>
+          )}
+        </div>
       </footer>
 
       <style>{`
