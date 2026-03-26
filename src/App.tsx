@@ -27,6 +27,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { GoogleGenAI } from "@google/genai";
 import { 
   auth, 
   signInWithGoogle, 
@@ -245,18 +246,16 @@ export default function App() {
         }
       `;
 
-      const response = await fetch("/api/generate-lesson-plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to generate lesson plan.");
-      }
-
-      const result = await response.json();
+      const result = JSON.parse(response.text || "{}");
       const planWithMetadata = { 
         ...result, 
         medium: formData.medium,
@@ -419,7 +418,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {currentUser.email === ADMIN_EMAIL && (
+            {currentUser?.email === ADMIN_EMAIL && (
               <button
                 onClick={() => {
                   setShowAdminPanel(true);
@@ -440,17 +439,21 @@ export default function App() {
                 <span>Download PDF</span>
               </button>
             )}
-            <div className="h-8 w-[1px] bg-slate-200 mx-1" />
-            <div className="flex items-center gap-3 pl-2">
-              <img src={currentUser.photoURL || ''} alt={currentUser.displayName || ''} className="w-8 h-8 rounded-full border border-blue-100" />
-              <button 
-                onClick={logout}
-                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                title="Logout"
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
+            {currentUser && (
+              <>
+                <div className="h-8 w-[1px] bg-slate-200 mx-1" />
+                <div className="flex items-center gap-3 pl-2">
+                  <img src={currentUser.photoURL || ''} alt={currentUser.displayName || ''} className="w-8 h-8 rounded-full border border-blue-100" />
+                  <button 
+                    onClick={logout}
+                    className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut size={20} />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
