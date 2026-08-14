@@ -470,164 +470,133 @@ export default function MarksheetManager() {
         </div>
       )}
 
-      {/* Data Grid */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[65vh] border border-gray-200 rounded-lg relative">
-        <table className="w-full text-sm text-left whitespace-nowrap">
-          <thead className="bg-gray-50 text-gray-600 sticky top-0 z-20 shadow-sm">
-            <tr>
-              <th className="px-1 md:px-2 py-3 text-center sticky left-0 top-0 z-30 bg-gray-50 w-[40px] min-w-[40px] md:w-[50px] md:min-w-[50px] border-b border-gray-200">
-                <input 
-                  type="checkbox" 
-                  checked={currentStudents.length > 0 && selectedStudents.size === currentStudents.length}
-                  onChange={toggleSelectAll}
-                  className="rounded text-blue-600 focus:ring-blue-500"
-                />
-              </th>
-              <th className="px-2 md:px-4 py-3 font-semibold sticky left-[40px] md:left-[50px] top-0 z-30 bg-gray-50 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] border-b border-gray-200 text-xs md:text-sm">GR No</th>
-              <th className="px-2 md:px-4 py-3 font-semibold sticky left-[100px] md:left-[130px] top-0 z-30 bg-gray-50 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-b border-gray-200 text-xs md:text-sm">Student Details</th>
-              
-              {entryMode === 'student' ? (
-                <>
-                  {currentSubjects.map(sub => (
-                    <th key={sub.id} className="px-4 py-3 font-semibold text-center border-b border-gray-200">{sub.name}</th>
-                  ))}
-                  <th className="px-4 py-3 font-semibold text-center bg-blue-50 border-b border-gray-200">Total</th>
-                  <th className="px-4 py-3 font-semibold text-center bg-blue-50 border-b border-gray-200">%age</th>
-                  <th className="px-4 py-3 font-semibold text-right border-b border-gray-200">Actions</th>
-                </>
-              ) : (
-                <>
-                  <th className="px-4 py-3 font-bold text-center bg-blue-100 text-blue-900 text-lg border-b border-gray-200">
-                    {currentSubjects.find(s => s.id === selectedSubjectId)?.name || 'Subject'} Marks
-                  </th>
-                  <th className="px-4 py-3 font-semibold text-right border-b border-gray-200">Actions</th>
-                </>
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {currentStudents.map((student, index) => {
-              const isEditing = editingId === student.id;
-              
-              return (
-                <tr 
-                  key={student.id} 
-                  className={`student-row group ${isEditing ? 'bg-yellow-50' : 'hover:bg-gray-50'} ${entryMode === 'student' ? 'cursor-pointer' : ''}`}
-                  onClick={() => handleRowClick(student)}
-                >
-                  <td className={`px-1 md:px-2 py-3 text-center sticky left-0 z-10 w-[40px] min-w-[40px] md:w-[50px] md:min-w-[50px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedStudents.has(student.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(student.id);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
-                  
-                  <td className={`px-2 md:px-4 py-3 sticky left-[40px] md:left-[50px] z-10 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
-                    {isEditing ? (
+      {/* Data Area */}
+      {entryMode === 'student' ? (
+        <div className="overflow-x-auto overflow-y-auto max-h-[65vh] border border-gray-200 rounded-lg relative">
+          <table className="w-full text-sm text-left whitespace-nowrap">
+            <thead className="bg-gray-50 text-gray-600 sticky top-0 z-20 shadow-sm">
+              <tr>
+                <th className="px-1 md:px-2 py-3 text-center sticky left-0 top-0 z-30 bg-gray-50 w-[40px] min-w-[40px] md:w-[50px] md:min-w-[50px] border-b border-gray-200">
+                  <input 
+                    type="checkbox" 
+                    checked={currentStudents.length > 0 && selectedStudents.size === currentStudents.length}
+                    onChange={toggleSelectAll}
+                    className="rounded text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
+                <th className="px-2 md:px-4 py-3 font-semibold sticky left-[40px] md:left-[50px] top-0 z-30 bg-gray-50 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] border-b border-gray-200 text-xs md:text-sm">GR No</th>
+                <th className="px-2 md:px-4 py-3 font-semibold sticky left-[100px] md:left-[130px] top-0 z-30 bg-gray-50 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-b border-gray-200 text-xs md:text-sm">Student Details</th>
+                
+                {currentSubjects.map(sub => (
+                  <th key={sub.id} className="px-4 py-3 font-semibold text-center border-b border-gray-200">{sub.name}</th>
+                ))}
+                <th className="px-4 py-3 font-semibold text-center bg-blue-50 border-b border-gray-200">Total</th>
+                <th className="px-4 py-3 font-semibold text-center bg-blue-50 border-b border-gray-200">%age</th>
+                <th className="px-4 py-3 font-semibold text-right border-b border-gray-200">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {currentStudents.map((student, index) => {
+                const isEditing = editingId === student.id;
+                
+                return (
+                  <tr 
+                    key={student.id} 
+                    className={`student-row group ${isEditing ? 'bg-yellow-50' : 'hover:bg-gray-50'} cursor-pointer`}
+                    onClick={() => handleRowClick(student)}
+                  >
+                    <td className={`px-1 md:px-2 py-3 text-center sticky left-0 z-10 w-[40px] min-w-[40px] md:w-[50px] md:min-w-[50px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
                       <input 
-                        type="text" 
-                        value={editForm.grNo || ''} 
-                        onChange={e => setEditForm({...editForm, grNo: e.target.value})}
-                        className="w-full px-1 py-1 border rounded focus:ring-2 focus:ring-blue-500 text-xs"
-                        placeholder="GR"
+                        type="checkbox" 
+                        checked={selectedStudents.has(student.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleSelect(student.id);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded text-blue-600 focus:ring-blue-500"
                       />
-                    ) : (
-                      <span className="font-medium text-gray-700 text-xs md:text-sm">{student.grNo}</span>
-                    )}
-                  </td>
-                  
-                  <td className={`px-2 md:px-4 py-3 sticky left-[100px] md:left-[130px] z-10 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-gray-200 ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
-                    {isEditing ? (
-                      <div className="flex flex-col gap-1 w-full">
+                    </td>
+                    
+                    <td className={`px-2 md:px-4 py-3 sticky left-[40px] md:left-[50px] z-10 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
+                      {isEditing ? (
                         <input 
                           type="text" 
-                          value={editForm.name || ''} 
-                          onChange={e => setEditForm({...editForm, name: e.target.value.toUpperCase()})}
-                          className="w-full px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
-                          placeholder="Student Name"
+                          value={editForm.grNo || ''} 
+                          onChange={e => setEditForm({...editForm, grNo: e.target.value})}
+                          className="w-full px-1 py-1 border rounded focus:ring-2 focus:ring-blue-500 text-xs"
+                          placeholder="GR"
                         />
-                        <input 
-                          type="text" 
-                          value={editForm.fatherName || ''} 
-                          onChange={e => setEditForm({...editForm, fatherName: e.target.value.toUpperCase()})}
-                          className="w-full px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
-                          placeholder="Father Name"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full truncate whitespace-normal leading-tight">
-                        <div className="font-bold text-gray-800 uppercase line-clamp-1 text-xs md:text-sm" title={student.name}>{student.name}</div>
-                        <div className="text-[10px] md:text-xs text-gray-500 uppercase line-clamp-1" title={student.fatherName}>{student.fatherName}</div>
-                      </div>
-                    )}
-                  </td>
-                  
-                  {entryMode === 'student' ? (
-                    <>
-                      {currentSubjects.map(sub => (
-                        <td key={sub.id} className="px-4 py-3 text-center">
-                          {isEditing ? (
-                            <input 
-                              type="number" 
-                              min="0"
-                              max={sub.maxMarks}
-                              value={editForm.marks?.[sub.id] ?? ''} 
-                              onChange={e => setEditForm({
-                                ...editForm, 
-                                marks: { ...editForm.marks, [sub.id]: Number(e.target.value) }
-                              })}
-                              className="w-14 px-1 py-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                          ) : (
-                            <span className="font-medium text-gray-700">{student.marks[sub.id] ?? '-'}</span>
-                          )}
-                        </td>
-                      ))}
-                      
-                      <td className="px-4 py-3 text-center font-bold text-gray-800 bg-blue-50/50">
-                        {isEditing 
-                          ? calculateTotal(editForm.marks || {}, currentSubjects)
-                          : calculateTotal(student.marks, currentSubjects)}
+                      ) : (
+                        <span className="font-medium text-gray-700 text-xs md:text-sm">{student.grNo}</span>
+                      )}
+                    </td>
+                    
+                    <td className={`px-2 md:px-4 py-3 sticky left-[100px] md:left-[130px] z-10 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-gray-200 ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
+                      {isEditing ? (
+                        <div className="flex flex-col gap-1 w-full">
+                          <input 
+                            type="text" 
+                            value={editForm.name || ''} 
+                            onChange={e => setEditForm({...editForm, name: e.target.value.toUpperCase()})}
+                            className="w-full px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
+                            placeholder="Student Name"
+                          />
+                          <input 
+                            type="text" 
+                            value={editForm.fatherName || ''} 
+                            onChange={e => setEditForm({...editForm, fatherName: e.target.value.toUpperCase()})}
+                            className="w-full px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
+                            placeholder="Father Name"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full truncate whitespace-normal leading-tight">
+                          <div className="font-bold text-gray-800 uppercase line-clamp-1 text-xs md:text-sm" title={student.name}>{student.name}</div>
+                          <div className="text-[10px] md:text-xs text-gray-500 uppercase line-clamp-1" title={student.fatherName}>{student.fatherName}</div>
+                        </div>
+                      )}
+                    </td>
+                    
+                    {currentSubjects.map(sub => (
+                      <td key={sub.id} className="px-4 py-3 text-center">
+                        {isEditing ? (
+                          <input 
+                            type="number" 
+                            min="0"
+                            max={sub.maxMarks}
+                            value={editForm.marks?.[sub.id] ?? ''} 
+                            onChange={e => setEditForm({
+                              ...editForm, 
+                              marks: { ...editForm.marks, [sub.id]: Number(e.target.value) }
+                            })}
+                            className="w-14 px-1 py-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        ) : (
+                          <span className="font-medium text-gray-700">{student.marks[sub.id] ?? '-'}</span>
+                        )}
                       </td>
-                      
-                      <td className="px-4 py-3 text-center font-bold text-indigo-600 bg-blue-50/50">
-                        {isEditing 
-                          ? calculatePercentage(editForm.marks || {}, currentSubjects)
-                          : calculatePercentage(student.marks, currentSubjects)}%
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      {/* Subject-Wise Entry Column */}
-                      <td className="px-4 py-3 text-center bg-blue-50">
-                        <input 
-                          type="number" 
-                          min="0"
-                          max={currentSubjects.find(s => s.id === selectedSubjectId)?.maxMarks || 100}
-                          value={student.marks[selectedSubjectId] ?? ''} 
-                          onChange={e => handleSubjectMarkUpdate(student.id, e.target.value)}
-                          onClick={e => e.stopPropagation()}
-                          className="w-24 px-3 py-2 border-2 border-blue-200 rounded-lg text-center font-bold text-lg focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white"
-                          placeholder="-"
-                        />
-                      </td>
-                    </>
-                  )}
-                  
-                  <td className="px-4 py-3 text-right">
-                    {isEditing ? (
-                      <button onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} className="action-btn text-green-600 hover:text-green-800 p-2 bg-green-50 rounded-lg">
-                        <Save size={18} />
-                      </button>
-                    ) : (
-                      <div className="flex justify-end gap-2">
-                        {entryMode === 'student' && (
+                    ))}
+                    
+                    <td className="px-4 py-3 text-center font-bold text-gray-800 bg-blue-50/50">
+                      {isEditing 
+                        ? calculateTotal(editForm.marks || {}, currentSubjects)
+                        : calculateTotal(student.marks, currentSubjects)}
+                    </td>
+                    
+                    <td className="px-4 py-3 text-center font-bold text-indigo-600 bg-blue-50/50">
+                      {isEditing 
+                        ? calculatePercentage(editForm.marks || {}, currentSubjects)
+                        : calculatePercentage(student.marks, currentSubjects)}%
+                    </td>
+                    
+                    <td className="px-4 py-3 text-right">
+                      {isEditing ? (
+                        <button onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} className="action-btn text-green-600 hover:text-green-800 p-2 bg-green-50 rounded-lg">
+                          <Save size={18} />
+                        </button>
+                      ) : (
+                        <div className="flex justify-end gap-2">
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
@@ -638,37 +607,73 @@ export default function MarksheetManager() {
                           >
                             <Edit2 size={16} />
                           </button>
-                        )}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(student.id);
-                          }} 
-                          className="action-btn text-red-500 hover:text-red-700 p-1.5 bg-red-50 rounded-md"
-                          title="Delete Student"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    )}
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(student.id);
+                            }} 
+                            className="action-btn text-red-500 hover:text-red-700 p-1.5 bg-red-50 rounded-md"
+                            title="Delete Student"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              
+              {currentStudents.length === 0 && !editingId && (
+                <tr>
+                  <td colSpan={currentSubjects.length + 6} className="px-4 py-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <Users size={32} className="text-gray-300" />
+                      <p>No students added to {activeClass} yet.</p>
+                    </div>
                   </td>
                 </tr>
-              );
-            })}
-            
-            {currentStudents.length === 0 && !editingId && (
-              <tr>
-                <td colSpan={entryMode === 'student' ? currentSubjects.length + 6 : 5} className="px-4 py-12 text-center text-gray-500">
-                  <div className="flex flex-col items-center gap-2">
-                    <Users size={32} className="text-gray-300" />
-                    <p>No students added to {activeClass} yet.</p>
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="flex flex-col max-h-[65vh] overflow-y-auto pb-4 pr-1">
+           <div className="flex justify-between items-center px-4 py-3 bg-blue-50 rounded-t-lg font-bold text-blue-900 sticky top-0 z-10 shadow-sm border border-blue-100 border-b-0">
+             <div className="w-24 text-center text-sm md:text-base">Marks<br/><span className="text-xs font-semibold text-blue-600">Max: {currentSubjects.find(s => s.id === selectedSubjectId)?.maxMarks}</span></div>
+             <div className="flex-1 text-right text-sm md:text-base">Student Details</div>
+           </div>
+           <div className="flex flex-col border border-gray-200 rounded-b-lg divide-y divide-gray-100">
+             {currentStudents.map(student => (
+               <div key={student.id} className="flex justify-between items-center px-4 py-3 bg-white hover:bg-gray-50 transition-colors">
+                  <div className="w-24 text-center flex-shrink-0">
+                    <input 
+                      type="number" 
+                      min="0"
+                      max={currentSubjects.find(s => s.id === selectedSubjectId)?.maxMarks || 100}
+                      value={student.marks[selectedSubjectId] ?? ''} 
+                      onChange={e => handleSubjectMarkUpdate(student.id, e.target.value)}
+                      className="w-full px-2 py-3 border-2 border-blue-200 rounded-lg text-center font-bold text-xl md:text-2xl focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white text-blue-900 shadow-sm transition-all"
+                      placeholder="-"
+                    />
                   </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  <div className="flex-1 flex flex-col items-end justify-center overflow-hidden pl-4">
+                    <div className="font-bold text-gray-800 uppercase text-sm md:text-base line-clamp-1 text-right w-full" title={student.name}>{student.name}</div>
+                    <div className="flex items-center justify-end gap-2 w-full mt-1">
+                       <span className="bg-gray-100 text-gray-600 border border-gray-200 px-2 py-0.5 rounded text-[10px] font-bold shrink-0">GR: {student.grNo}</span>
+                       <span className="text-xs text-gray-500 uppercase line-clamp-1 text-right w-full" title={student.fatherName}>{student.fatherName}</span>
+                    </div>
+                  </div>
+               </div>
+             ))}
+             {currentStudents.length === 0 && (
+                <div className="px-4 py-12 text-center text-gray-500 bg-white">
+                  <p>No students available. Switch to Student-wise mode to add students.</p>
+                </div>
+             )}
+           </div>
+        </div>
+      )}
       
       <div className="mt-6 flex justify-between items-center">
         <button 
