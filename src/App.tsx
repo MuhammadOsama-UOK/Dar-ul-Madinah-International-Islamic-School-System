@@ -144,7 +144,7 @@ export default function App() {
   const [allPlans, setAllPlans] = useState<any[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [adminFilterClass, setAdminFilterClass] = useState('');
-  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager'>('marksheet-manager');
+  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager'>('lesson-planner');
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const ADMIN_EMAIL = "osamajafar5070@gmail.com";
@@ -405,35 +405,38 @@ export default function App() {
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100">
       {/* Header */}
       <header className="bg-white border-b border-blue-100 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center text-white shadow-lg">
-              <Layers size={28} />
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-900 rounded-full flex items-center justify-center text-white shadow-lg shrink-0">
+                <Layers size={24} className="md:w-7 md:h-7" />
+              </div>
+              <div className="flex flex-col items-start mr-2 md:mr-8">
+                <h1 className="text-lg md:text-xl font-bold tracking-tight text-blue-900 leading-tight">
+                  DAR-UL-MADINAH
+                </h1>
+                <p className="text-[9px] md:text-[10px] font-semibold text-blue-600 tracking-[0.2em] uppercase">
+                  International Islamic School System
+                </p>
+              </div>
             </div>
-            <div className="flex flex-col items-start mr-8">
-              <h1 className="text-xl font-bold tracking-tight text-blue-900 leading-tight">
-                DAR-UL-MADINAH
-              </h1>
-              <p className="text-[10px] font-semibold text-blue-600 tracking-[0.2em] uppercase">
-                International Islamic School System
-              </p>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
+            
+            <div className="flex flex-1 md:flex-none items-center justify-center md:justify-start gap-2 bg-slate-100 md:bg-transparent p-1 md:p-0 rounded-lg w-full md:w-auto">
               <button 
                 onClick={() => setActiveModule('lesson-planner')}
-                className={`text-sm font-semibold transition-colors ${activeModule === 'lesson-planner' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'lesson-planner' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Lesson Planner
               </button>
               <button 
                 onClick={() => setActiveModule('marksheet-manager')}
-                className={`text-sm font-semibold transition-colors ${activeModule === 'marksheet-manager' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'marksheet-manager' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Marksheet Manager
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
             {currentUser?.email === ADMIN_EMAIL && (
               <button
                 onClick={() => {
