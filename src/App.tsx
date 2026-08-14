@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { GoogleGenAI } from "@google/genai";
+import MarksheetManager from './components/marksheet/MarksheetManager';
 import { 
   auth, 
   signInWithGoogle, 
@@ -143,6 +144,7 @@ export default function App() {
   const [allPlans, setAllPlans] = useState<any[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [adminFilterClass, setAdminFilterClass] = useState('');
+  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager'>('marksheet-manager');
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const ADMIN_EMAIL = "osamajafar5070@gmail.com";
@@ -408,13 +410,27 @@ export default function App() {
             <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center text-white shadow-lg">
               <Layers size={28} />
             </div>
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start mr-8">
               <h1 className="text-xl font-bold tracking-tight text-blue-900 leading-tight">
                 DAR-UL-MADINAH
               </h1>
               <p className="text-[10px] font-semibold text-blue-600 tracking-[0.2em] uppercase">
                 International Islamic School System
               </p>
+            </div>
+            <div className="hidden md:flex items-center gap-6">
+              <button 
+                onClick={() => setActiveModule('lesson-planner')}
+                className={`text-sm font-semibold transition-colors ${activeModule === 'lesson-planner' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Lesson Planner
+              </button>
+              <button 
+                onClick={() => setActiveModule('marksheet-manager')}
+                className={`text-sm font-semibold transition-colors ${activeModule === 'marksheet-manager' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Marksheet Manager
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -458,7 +474,9 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {activeModule === 'lesson-planner' ? (
+        <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
         {/* Left Column: Input Form */}
         <div className="lg:col-span-4 space-y-6">
           <section className="bg-white p-6 rounded-2xl border border-blue-100 shadow-xl shadow-blue-900/5">
@@ -935,6 +953,11 @@ export default function App() {
           </AnimatePresence>
         </div>
       </main>
+      ) : (
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <MarksheetManager />
+        </main>
+      )}
 
       {/* Footer */}
       <footer className="max-w-7xl mx-auto px-4 py-12 border-t border-blue-100 mt-12 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm gap-4">
