@@ -44,6 +44,46 @@ export default function MarksheetManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Student>>({});
 
+  const stateRefs = useRef({ editingId, editForm, activeClass });
+  useEffect(() => {
+    stateRefs.current = { editingId, editForm, activeClass };
+  }, [editingId, editForm, activeClass]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.student-row') && !target.closest('.action-btn')) {
+        const { editingId: currentId, editForm: currentForm, activeClass: currClass } = stateRefs.current;
+        if (currentId) {
+          setData(prev => ({
+            ...prev,
+            [currClass]: prev[currClass].map(s => s.id === currentId ? { ...s, ...currentForm } as Student : s)
+          }));
+          setEditingId(null);
+          setEditForm({});
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const { editingId: currentId, editForm: currentForm, activeClass: currClass } = stateRefs.current;
+      if (currentId) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        let parsed = saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+        if (parsed[currClass]) {
+          parsed[currClass] = parsed[currClass].map((s: Student) => s.id === currentId ? { ...s, ...currentForm } as Student : s);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [data]);
@@ -98,12 +138,28 @@ export default function MarksheetManager() {
   };
 
   const handleSaveEdit = () => {
+    if (!editingId) return;
     setData(prev => ({
       ...prev,
       [activeClass]: prev[activeClass].map(s => s.id === editingId ? { ...s, ...editForm } as Student : s)
     }));
     setEditingId(null);
     setEditForm({});
+  };
+
+  const handleRowClick = (student: Student) => {
+    if (entryMode !== 'student') return;
+    if (editingId === student.id) return;
+
+    if (editingId) {
+      setData(prev => ({
+        ...prev,
+        [activeClass]: prev[activeClass].map(s => s.id === editingId ? { ...s, ...editForm } as Student : s)
+      }));
+    }
+
+    setEditingId(student.id);
+    setEditForm(student);
   };
 
   const handleDelete = (id: string) => {
@@ -415,11 +471,11 @@ export default function MarksheetManager() {
       )}
 
       {/* Data Grid */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+      <div className="overflow-x-auto overflow-y-auto max-h-[65vh] border border-gray-200 rounded-lg relative">
         <table className="w-full text-sm text-left whitespace-nowrap">
-          <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+          <thead className="bg-gray-50 text-gray-600 sticky top-0 z-20 shadow-sm">
             <tr>
-              <th className="px-4 py-3 w-10 text-center">
+              <th className="px-1 md:px-2 py-3 text-center sticky left-0 top-0 z-30 bg-gray-50 w-[40px] min-w-[40px] md:w-[50px] md:min-w-[50px] border-b border-gray-200">
                 <input 
                   type="checkbox" 
                   checked={currentStudents.length > 0 && selectedStudents.size === currentStudents.length}
@@ -427,24 +483,24 @@ export default function MarksheetManager() {
                   className="rounded text-blue-600 focus:ring-blue-500"
                 />
               </th>
-              <th className="px-4 py-3 font-semibold">GR No</th>
-              <th className="px-4 py-3 font-semibold">Student Details</th>
+              <th className="px-2 md:px-4 py-3 font-semibold sticky left-[40px] md:left-[50px] top-0 z-30 bg-gray-50 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] border-b border-gray-200 text-xs md:text-sm">GR No</th>
+              <th className="px-2 md:px-4 py-3 font-semibold sticky left-[100px] md:left-[130px] top-0 z-30 bg-gray-50 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-b border-gray-200 text-xs md:text-sm">Student Details</th>
               
               {entryMode === 'student' ? (
                 <>
                   {currentSubjects.map(sub => (
-                    <th key={sub.id} className="px-4 py-3 font-semibold text-center">{sub.name}</th>
+                    <th key={sub.id} className="px-4 py-3 font-semibold text-center border-b border-gray-200">{sub.name}</th>
                   ))}
-                  <th className="px-4 py-3 font-semibold text-center bg-blue-50">Total</th>
-                  <th className="px-4 py-3 font-semibold text-center bg-blue-50">%age</th>
-                  <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                  <th className="px-4 py-3 font-semibold text-center bg-blue-50 border-b border-gray-200">Total</th>
+                  <th className="px-4 py-3 font-semibold text-center bg-blue-50 border-b border-gray-200">%age</th>
+                  <th className="px-4 py-3 font-semibold text-right border-b border-gray-200">Actions</th>
                 </>
               ) : (
                 <>
-                  <th className="px-4 py-3 font-bold text-center bg-blue-100 text-blue-900 text-lg">
+                  <th className="px-4 py-3 font-bold text-center bg-blue-100 text-blue-900 text-lg border-b border-gray-200">
                     {currentSubjects.find(s => s.id === selectedSubjectId)?.name || 'Subject'} Marks
                   </th>
-                  <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                  <th className="px-4 py-3 font-semibold text-right border-b border-gray-200">Actions</th>
                 </>
               )}
             </tr>
@@ -454,52 +510,60 @@ export default function MarksheetManager() {
               const isEditing = editingId === student.id;
               
               return (
-                <tr key={student.id} className={`hover:bg-gray-50/50 ${isEditing ? 'bg-yellow-50' : ''}`}>
-                  <td className="px-4 py-3 text-center">
+                <tr 
+                  key={student.id} 
+                  className={`student-row group ${isEditing ? 'bg-yellow-50' : 'hover:bg-gray-50'} ${entryMode === 'student' ? 'cursor-pointer' : ''}`}
+                  onClick={() => handleRowClick(student)}
+                >
+                  <td className={`px-1 md:px-2 py-3 text-center sticky left-0 z-10 w-[40px] min-w-[40px] md:w-[50px] md:min-w-[50px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
                     <input 
                       type="checkbox" 
                       checked={selectedStudents.has(student.id)}
-                      onChange={() => toggleSelect(student.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(student.id);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
                   </td>
                   
-                  <td className="px-4 py-3">
+                  <td className={`px-2 md:px-4 py-3 sticky left-[40px] md:left-[50px] z-10 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
                     {isEditing ? (
                       <input 
                         type="text" 
                         value={editForm.grNo || ''} 
                         onChange={e => setEditForm({...editForm, grNo: e.target.value})}
-                        className="w-16 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-1 py-1 border rounded focus:ring-2 focus:ring-blue-500 text-xs"
                         placeholder="GR"
                       />
                     ) : (
-                      <span className="font-medium text-gray-700">{student.grNo}</span>
+                      <span className="font-medium text-gray-700 text-xs md:text-sm">{student.grNo}</span>
                     )}
                   </td>
                   
-                  <td className="px-4 py-3">
+                  <td className={`px-2 md:px-4 py-3 sticky left-[100px] md:left-[130px] z-10 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-gray-200 ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
                     {isEditing ? (
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 w-full">
                         <input 
                           type="text" 
                           value={editForm.name || ''} 
                           onChange={e => setEditForm({...editForm, name: e.target.value.toUpperCase()})}
-                          className="w-48 px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
                           placeholder="Student Name"
                         />
                         <input 
                           type="text" 
                           value={editForm.fatherName || ''} 
                           onChange={e => setEditForm({...editForm, fatherName: e.target.value.toUpperCase()})}
-                          className="w-48 px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-2 py-1 border rounded uppercase text-xs focus:ring-2 focus:ring-blue-500"
                           placeholder="Father Name"
                         />
                       </div>
                     ) : (
-                      <div>
-                        <div className="font-bold text-gray-800 uppercase">{student.name}</div>
-                        <div className="text-xs text-gray-500 uppercase">{student.fatherName}</div>
+                      <div className="w-full truncate whitespace-normal leading-tight">
+                        <div className="font-bold text-gray-800 uppercase line-clamp-1 text-xs md:text-sm" title={student.name}>{student.name}</div>
+                        <div className="text-[10px] md:text-xs text-gray-500 uppercase line-clamp-1" title={student.fatherName}>{student.fatherName}</div>
                       </div>
                     )}
                   </td>
@@ -548,6 +612,7 @@ export default function MarksheetManager() {
                           max={currentSubjects.find(s => s.id === selectedSubjectId)?.maxMarks || 100}
                           value={student.marks[selectedSubjectId] ?? ''} 
                           onChange={e => handleSubjectMarkUpdate(student.id, e.target.value)}
+                          onClick={e => e.stopPropagation()}
                           className="w-24 px-3 py-2 border-2 border-blue-200 rounded-lg text-center font-bold text-lg focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white"
                           placeholder="-"
                         />
@@ -557,26 +622,29 @@ export default function MarksheetManager() {
                   
                   <td className="px-4 py-3 text-right">
                     {isEditing ? (
-                      <button onClick={handleSaveEdit} className="text-green-600 hover:text-green-800 p-2 bg-green-50 rounded-lg">
+                      <button onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} className="action-btn text-green-600 hover:text-green-800 p-2 bg-green-50 rounded-lg">
                         <Save size={18} />
                       </button>
                     ) : (
                       <div className="flex justify-end gap-2">
                         {entryMode === 'student' && (
                           <button 
-                            onClick={() => {
-                              setEditingId(student.id);
-                              setEditForm(student);
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowClick(student);
                             }} 
-                            className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded-md"
+                            className="action-btn text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded-md"
                             title="Edit Student Data & All Marks"
                           >
                             <Edit2 size={16} />
                           </button>
                         )}
                         <button 
-                          onClick={() => handleDelete(student.id)} 
-                          className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 rounded-md"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(student.id);
+                          }} 
+                          className="action-btn text-red-500 hover:text-red-700 p-1.5 bg-red-50 rounded-md"
                           title="Delete Student"
                         >
                           <Trash2 size={16} />
