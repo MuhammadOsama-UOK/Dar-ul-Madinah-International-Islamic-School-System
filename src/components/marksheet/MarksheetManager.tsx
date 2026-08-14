@@ -42,12 +42,13 @@ export default function MarksheetManager() {
 
   // Edit State (for student-wise)
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [coreEditId, setCoreEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Student>>({});
 
-  const stateRefs = useRef({ editingId, editForm, activeClass });
+  const stateRefs = useRef({ editingId, editForm, activeClass, coreEditId });
   useEffect(() => {
-    stateRefs.current = { editingId, editForm, activeClass };
-  }, [editingId, editForm, activeClass]);
+    stateRefs.current = { editingId, editForm, activeClass, coreEditId };
+  }, [editingId, editForm, activeClass, coreEditId]);
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -60,6 +61,7 @@ export default function MarksheetManager() {
             [currClass]: prev[currClass].map(s => s.id === currentId ? { ...s, ...currentForm } as Student : s)
           }));
           setEditingId(null);
+          setCoreEditId(null);
           setEditForm({});
         }
       }
@@ -129,6 +131,7 @@ export default function MarksheetManager() {
     
     if (entryMode === 'student') {
       setEditingId(newStudent.id);
+      setCoreEditId(newStudent.id);
       setEditForm(newStudent);
     }
     setData(prev => ({
@@ -144,6 +147,7 @@ export default function MarksheetManager() {
       [activeClass]: prev[activeClass].map(s => s.id === editingId ? { ...s, ...editForm } as Student : s)
     }));
     setEditingId(null);
+    setCoreEditId(null);
     setEditForm({});
   };
 
@@ -156,6 +160,7 @@ export default function MarksheetManager() {
         ...prev,
         [activeClass]: prev[activeClass].map(s => s.id === editingId ? { ...s, ...editForm } as Student : s)
       }));
+      setCoreEditId(null);
     }
 
     setEditingId(student.id);
@@ -518,8 +523,18 @@ export default function MarksheetManager() {
                       />
                     </td>
                     
-                    <td className={`px-2 md:px-4 py-3 sticky left-[40px] md:left-[50px] z-10 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
-                      {isEditing ? (
+                    <td 
+                      className={`px-2 md:px-4 py-3 sticky left-[40px] md:left-[50px] z-10 w-[60px] min-w-[60px] md:w-[80px] md:min-w-[80px] ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}
+                      onClick={(e) => {
+                        if (e.detail >= 3) {
+                          e.stopPropagation();
+                          setCoreEditId(student.id);
+                          if (editingId !== student.id) handleRowClick(student);
+                        }
+                      }}
+                      title="Triple click to edit GR Number"
+                    >
+                      {isEditing && coreEditId === student.id ? (
                         <input 
                           type="text" 
                           value={editForm.grNo || ''} 
@@ -528,12 +543,22 @@ export default function MarksheetManager() {
                           placeholder="GR"
                         />
                       ) : (
-                        <span className="font-medium text-gray-700 text-xs md:text-sm">{student.grNo}</span>
+                        <span className="font-medium text-gray-700 text-xs md:text-sm select-none">{student.grNo}</span>
                       )}
                     </td>
                     
-                    <td className={`px-2 md:px-4 py-3 sticky left-[100px] md:left-[130px] z-10 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-gray-200 ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}>
-                      {isEditing ? (
+                    <td 
+                      className={`px-2 md:px-4 py-3 sticky left-[100px] md:left-[130px] z-10 w-[140px] min-w-[140px] md:w-[240px] md:min-w-[240px] border-r-2 border-gray-200 ${isEditing ? 'bg-yellow-50' : 'bg-white group-hover:bg-gray-50'}`}
+                      onClick={(e) => {
+                        if (e.detail >= 3) {
+                          e.stopPropagation();
+                          setCoreEditId(student.id);
+                          if (editingId !== student.id) handleRowClick(student);
+                        }
+                      }}
+                      title="Triple click to edit Name details"
+                    >
+                      {isEditing && coreEditId === student.id ? (
                         <div className="flex flex-col gap-1 w-full">
                           <input 
                             type="text" 
@@ -551,7 +576,7 @@ export default function MarksheetManager() {
                           />
                         </div>
                       ) : (
-                        <div className="w-full truncate whitespace-normal leading-tight">
+                        <div className="w-full truncate whitespace-normal leading-tight select-none pointer-events-none">
                           <div className="font-bold text-gray-800 uppercase line-clamp-1 text-xs md:text-sm" title={student.name}>{student.name}</div>
                           <div className="text-[10px] md:text-xs text-gray-500 uppercase line-clamp-1" title={student.fatherName}>{student.fatherName}</div>
                         </div>
@@ -639,14 +664,14 @@ export default function MarksheetManager() {
         </div>
       ) : (
         <div className="flex flex-col max-h-[65vh] overflow-y-auto pb-4 pr-1">
-           <div className="flex justify-between items-center px-4 py-3 bg-blue-50 rounded-t-lg font-bold text-blue-900 sticky top-0 z-10 shadow-sm border border-blue-100 border-b-0">
-             <div className="w-24 text-center text-sm md:text-base">Marks<br/><span className="text-xs font-semibold text-blue-600">Max: {currentSubjects.find(s => s.id === selectedSubjectId)?.maxMarks}</span></div>
-             <div className="flex-1 text-right text-sm md:text-base">Student Details</div>
+           <div className="flex justify-start items-center px-4 py-3 bg-blue-50 rounded-t-lg font-bold text-blue-900 sticky top-0 z-10 shadow-sm border border-blue-100 border-b-0">
+             <div className="w-24 text-center text-sm md:text-base border-r border-blue-200 pr-4">Marks<br/><span className="text-xs font-semibold text-blue-600">Max: {currentSubjects.find(s => s.id === selectedSubjectId)?.maxMarks}</span></div>
+             <div className="flex-1 text-left text-sm md:text-base pl-4">Student Details</div>
            </div>
            <div className="flex flex-col border border-gray-200 rounded-b-lg divide-y divide-gray-100">
              {currentStudents.map(student => (
-               <div key={student.id} className="flex justify-between items-center px-4 py-3 bg-white hover:bg-gray-50 transition-colors">
-                  <div className="w-24 text-center flex-shrink-0">
+               <div key={student.id} className="flex justify-start items-center px-4 py-3 bg-white hover:bg-gray-50 transition-colors">
+                  <div className="w-24 text-center flex-shrink-0 border-r border-gray-100 pr-4 py-1">
                     <input 
                       type="number" 
                       min="0"
@@ -657,11 +682,11 @@ export default function MarksheetManager() {
                       placeholder="-"
                     />
                   </div>
-                  <div className="flex-1 flex flex-col items-end justify-center overflow-hidden pl-4">
-                    <div className="font-bold text-gray-800 uppercase text-sm md:text-base line-clamp-1 text-right w-full" title={student.name}>{student.name}</div>
-                    <div className="flex items-center justify-end gap-2 w-full mt-1">
+                  <div className="flex-1 flex flex-col items-start justify-center overflow-hidden pl-4">
+                    <div className="font-bold text-gray-800 uppercase text-sm md:text-base whitespace-normal leading-tight text-left w-full" title={student.name}>{student.name}</div>
+                    <div className="flex flex-wrap items-center justify-start gap-2 w-full mt-1">
                        <span className="bg-gray-100 text-gray-600 border border-gray-200 px-2 py-0.5 rounded text-[10px] font-bold shrink-0">GR: {student.grNo}</span>
-                       <span className="text-xs text-gray-500 uppercase line-clamp-1 text-right w-full" title={student.fatherName}>{student.fatherName}</span>
+                       <span className="text-xs text-gray-500 uppercase whitespace-normal leading-tight text-left" title={student.fatherName}>{student.fatherName}</span>
                     </div>
                   </div>
                </div>
