@@ -4,6 +4,7 @@ import { DEFAULT_CLASS_SUBJECTS, INITIAL_CLASSES } from '../../data/marksheetDat
 import { INITIAL_STUDENTS } from '../../data/initialStudents';
 import { Save, Printer, Plus, Trash2, Edit2, UploadCloud, CheckCircle2, Settings, Users, BookOpen } from 'lucide-react';
 import { generatePrintHTML } from './PrintTemplate';
+import { db, doc, onSnapshot, setDoc } from '../../firebase';
 
 const STORAGE_KEY = 'marksheet_data_v2';
 const SCRIPT_URL_KEY = 'marksheet_script_url';
@@ -13,17 +14,71 @@ export default function MarksheetManager() {
   const [activeClass, setActiveClass] = useState<ClassName>('Class IV');
   
   // Custom Subjects config (stores max marks)
-  const [subjectsConfig, setSubjectsConfig] = useState<Record<ClassName, Subject[]>>(() => {
+  const [_subjectsConfig, _setSubjectsConfig] = useState<Record<ClassName, Subject[]>>(() => {
     const saved = localStorage.getItem(SUBJECT_CONFIG_KEY);
     if (saved) return JSON.parse(saved);
     return DEFAULT_CLASS_SUBJECTS;
   });
 
-  const [data, setData] = useState<Record<ClassName, Student[]>>(() => {
+  const [_data, _setData] = useState<Record<ClassName, Student[]>>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
     return INITIAL_STUDENTS;
   });
+
+  const setData = (updater: any) => {
+    _setData((prev: Record<ClassName, Student[]>) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      setDoc(doc(db, 'marksheets', 'studentsData'), { ...next }).catch(console.error);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const setSubjectsConfig = (updater: any) => {
+    _setSubjectsConfig((prev: Record<ClassName, Subject[]>) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      setDoc(doc(db, 'marksheets', 'subjectsConfig'), { ...next }).catch(console.error);
+      localStorage.setItem(SUBJECT_CONFIG_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const subjectsConfig = _subjectsConfig;
+  const data = _data;
+
+  useEffect(() => {
+    // Listen to Firebase and sync
+    const unsubData = onSnapshot(doc(db, 'marksheets', 'studentsData'), (docSnap) => {
+      if (docSnap.exists()) {
+        const firestoreData = docSnap.data() as Record<ClassName, Student[]>;
+        _setData(firestoreData);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(firestoreData));
+      } else {
+        // Initial setup from local storage if firestore is empty
+        const saved = localStorage.getItem(STORAGE_KEY);
+        const initial = saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+        setDoc(doc(db, 'marksheets', 'studentsData'), { ...initial });
+      }
+    });
+
+    const unsubSubj = onSnapshot(doc(db, 'marksheets', 'subjectsConfig'), (docSnap) => {
+      if (docSnap.exists()) {
+        const firestoreConfig = docSnap.data() as Record<ClassName, Subject[]>;
+        _setSubjectsConfig(firestoreConfig);
+        localStorage.setItem(SUBJECT_CONFIG_KEY, JSON.stringify(firestoreConfig));
+      } else {
+        const saved = localStorage.getItem(SUBJECT_CONFIG_KEY);
+        const initial = saved ? JSON.parse(saved) : DEFAULT_CLASS_SUBJECTS;
+        setDoc(doc(db, 'marksheets', 'subjectsConfig'), { ...initial });
+      }
+    });
+
+    return () => {
+      unsubData();
+      unsubSubj();
+    };
+  }, []);
   
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [scriptUrl, setScriptUrl] = useState<string>(() => localStorage.getItem(SCRIPT_URL_KEY) || '');
@@ -56,7 +111,7 @@ export default function MarksheetManager() {
       if (!target.closest('.student-row') && !target.closest('.action-btn')) {
         const { editingId: currentId, editForm: currentForm, activeClass: currClass } = stateRefs.current;
         if (currentId) {
-          setData(prev => ({
+          setData((prev: Record<ClassName, Student[]>) => ({
             ...prev,
             [currClass]: prev[currClass].map(s => s.id === currentId ? { ...s, ...currentForm } as Student : s)
           }));
@@ -79,20 +134,13 @@ export default function MarksheetManager() {
         if (parsed[currClass]) {
           parsed[currClass] = parsed[currClass].map((s: Student) => s.id === currentId ? { ...s, ...currentForm } as Student : s);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+          setDoc(doc(db, 'marksheets', 'studentsData'), { ...parsed }).catch(console.error);
         }
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data]);
-
-  useEffect(() => {
-    localStorage.setItem(SUBJECT_CONFIG_KEY, JSON.stringify(subjectsConfig));
-  }, [subjectsConfig]);
 
   const currentSubjects = subjectsConfig[activeClass] || DEFAULT_CLASS_SUBJECTS[activeClass];
   const currentStudents = data[activeClass] || [];

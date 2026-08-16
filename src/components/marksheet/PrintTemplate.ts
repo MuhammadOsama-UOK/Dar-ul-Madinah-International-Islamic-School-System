@@ -1,15 +1,13 @@
 import { Student, Subject, ClassName } from '../../types/marksheet';
 
 export function generatePrintHTML(students: Student[], subjects: Subject[], className: ClassName): string {
-  // We need to print EXACTLY FOUR marksheets per A3 page.
-  // We'll loop and chunk them into groups of 4.
-  
   let html = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <title>Dar-ul-Madinah_Marksheet_${className.replace(/\s+/g, '_')}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
       <style>
         @page { size: A3 landscape; margin: 10mm; }
         body {
@@ -80,7 +78,7 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
         .marks-table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 15px;
+          margin-bottom: 10px;
           flex-grow: 1;
           background: #fff;
         }
@@ -102,19 +100,47 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
           font-weight: bold;
           color: #0369a1;
         }
+        .remarks {
+          text-align: center;
+          font-style: italic;
+          font-weight: 600;
+          color: #1e3a8a;
+          font-size: 13px;
+          padding: 8px;
+          background-color: #e0f2fe;
+          border-radius: 6px;
+          margin-bottom: 15px;
+        }
         .footer {
           display: flex;
           justify-content: space-between;
+          align-items: flex-end;
           margin-top: auto;
           font-size: 12px;
           color: #64748b;
-          padding-top: 20px;
+          padding-top: 10px;
         }
-        .signature {
-          border-top: 1px solid #64748b;
+        .signature-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           width: 150px;
+        }
+        .principal-sig {
+          font-family: 'Dancing Script', cursive;
+          font-size: 28px;
+          color: #1e3a8a;
+          margin-bottom: -5px; /* Pull closer to the line */
+        }
+        .signature-line {
+          border-top: 1px solid #64748b;
+          width: 100%;
           text-align: center;
           padding-top: 4px;
+          margin-top: 25px; /* Space for manual signature if needed */
+        }
+        .signature-line.with-sig {
+          margin-top: 0;
         }
       </style>
     </head>
@@ -123,7 +149,6 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
 
   for (let i = 0; i < students.length; i += 4) {
     const chunk = students.slice(i, i + 4);
-
     html += `<div class="page">`;
     
     for (let j = 0; j < 4; j++) {
@@ -133,7 +158,6 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
         html += `<div style="visibility: hidden;"></div>`;
       }
     }
-
     html += `</div>`;
   }
 
@@ -141,8 +165,16 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
     </body>
     </html>
   `;
-
   return html;
+}
+
+function getRemarks(pct: number): string {
+  if (pct >= 90) return "Outstanding performance! Keep shining!";
+  if (pct >= 80) return "Excellent work! Your hard work is paying off.";
+  if (pct >= 70) return "Good effort! Keep striving for excellence.";
+  if (pct >= 60) return "Satisfactory, but there is room for improvement.";
+  if (pct >= 50) return "Needs more focus and hard work. You can do better!";
+  return "Requires urgent attention and regular study habits.";
 }
 
 function generateMarksheet(student: Student, subjects: Subject[], className: ClassName): string {
@@ -158,6 +190,8 @@ function generateMarksheet(student: Student, subjects: Subject[], className: Cla
   else if (pct >= 60) grade = 'B';
   else if (pct >= 50) grade = 'C';
   else if (pct >= 40) grade = 'D';
+
+  const remarks = getRemarks(pct);
 
   let subjectHeaders = subjects.map(s => `<th>${s.name}</th>`).join('');
   let subjectMarks = subjects.map(s => `<td>${student.marks[s.id] ?? '-'}</td>`).join('');
@@ -207,9 +241,16 @@ function generateMarksheet(student: Student, subjects: Subject[], className: Cla
         </tbody>
       </table>
 
+      <div class="remarks">Remarks: "${remarks}"</div>
+
       <div class="footer">
-        <div class="signature">Class Teacher</div>
-        <div class="signature">Principal</div>
+        <div class="signature-box">
+          <div class="signature-line">Class Teacher</div>
+        </div>
+        <div class="signature-box">
+          <div class="principal-sig">Muneer Riaz</div>
+          <div class="signature-line with-sig">Principal</div>
+        </div>
       </div>
     </div>
   `;

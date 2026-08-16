@@ -44,6 +44,43 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["authorId", "topic", "className", "subject"]
+    },
+    "marksheets": {
+      "title": "Marksheet Data",
+      "description": "Stores students and subjects for a specific class.",
+      "type": "object",
+      "properties": {
+        "className": { "type": "string" },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "maxMarks": { "type": "number" }
+            }
+          }
+        },
+        "students": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "sNo": { "type": "number" },
+              "grNo": { "type": "string" },
+              "name": { "type": "string" },
+              "fatherName": { "type": "string" },
+              "marks": {
+                "type": "object",
+                "additionalProperties": { "type": "number" }
+              }
+            }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "firestore": {
@@ -54,6 +91,10 @@
     "/lessonPlans/{planId}": {
       "schema": "lessonPlans",
       "description": "Lesson plan documents."
+    },
+    "/marksheets/{className}": {
+      "schema": "marksheets",
+      "description": "Class marksheet documents."
     }
   }
 }

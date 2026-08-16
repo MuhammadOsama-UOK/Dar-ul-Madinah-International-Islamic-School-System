@@ -92,5 +92,10 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin()) && isValidLessonPlan(request.resource.data);
       allow delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
     }
+
+    match /marksheets/{document=**} {
+      // allow public read/write to emulate localStorage behavior for teachers without requiring explicit account creation for now
+      allow read, write: if true;
+    }
   }
 }
