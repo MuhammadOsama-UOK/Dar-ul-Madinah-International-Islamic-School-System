@@ -29,6 +29,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { GoogleGenAI } from "@google/genai";
 import MarksheetManager from './components/marksheet/MarksheetManager';
+import CopyCheckingList from './components/copy-checking/CopyCheckingList';
 import { 
   auth, 
   signInWithGoogle, 
@@ -144,7 +145,7 @@ export default function App() {
   const [allPlans, setAllPlans] = useState<any[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [adminFilterClass, setAdminFilterClass] = useState('');
-  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager'>('lesson-planner');
+  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager' | 'copy-checking-list'>('lesson-planner');
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const ADMIN_EMAIL = "osamajafar5070@gmail.com";
@@ -433,6 +434,12 @@ export default function App() {
                 className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'marksheet-manager' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Marksheet Manager
+              </button>
+              <button 
+                onClick={() => setActiveModule('copy-checking-list')}
+                className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'copy-checking-list' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Copy Checking List
               </button>
             </div>
           </div>
@@ -956,9 +963,13 @@ export default function App() {
           </AnimatePresence>
         </div>
       </main>
-      ) : (
+      ) : activeModule === 'marksheet-manager' ? (
         <main className="max-w-7xl mx-auto px-4 py-8">
           <MarksheetManager />
+        </main>
+      ) : (
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <CopyCheckingList />
         </main>
       )}
 

@@ -89,6 +89,7 @@ export default function MarksheetManager() {
   // Triple Click Logic
   const [headingClicks, setHeadingClicks] = useState(0);
   const [showMaxMarksConfig, setShowMaxMarksConfig] = useState(false);
+  const [autoSign, setAutoSign] = useState(false);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Entry Mode Logic
@@ -267,7 +268,7 @@ export default function MarksheetManager() {
       return;
     }
 
-    const printHtml = generatePrintHTML(studentsToPrint, currentSubjects, activeClass);
+    const printHtml = generatePrintHTML(studentsToPrint, currentSubjects, activeClass, autoSign);
     
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -427,6 +428,19 @@ export default function MarksheetManager() {
                   />
                 </div>
               ))}
+            </div>
+
+            <div className="mt-4 pt-4 border-t flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="autoSignCheckbox" 
+                checked={autoSign} 
+                onChange={(e) => setAutoSign(e.target.checked)}
+                className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+              />
+              <label htmlFor="autoSignCheckbox" className="text-sm text-gray-700 font-medium cursor-pointer">
+                Auto Sign Marksheet (Principal Signature)
+              </label>
             </div>
 
             <div className="mt-6 flex justify-between items-center border-t pt-4">
