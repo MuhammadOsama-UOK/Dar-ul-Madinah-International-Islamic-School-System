@@ -50,15 +50,17 @@ export default function SubjectThemeGenerator() {
         1. Always write Prophet Muhammad's name completely with the Arabic abbreviation beautifully like: Prophet Muhammad ﷺ (or حضرت محمد ﷺ in Urdu).
         2. Provide complete Islamic abbreviations for other noble names as well (like Radiallahu Anhu, Alaihis Salam, etc. suitably).
         3. Keep the tone engaging, educational, and deeply connected to Dawate Islami's mission of tarbiyyah and Islamic values.
-        4. DESIGN FOR VISUAL LEARNING: This theme is designed for STUDENTS. Use highly visual, captivating language, short impactful sentences, and relevant EMOJIS.
-        5. Provide content for a physical A4 poster that will be put on a classroom soft board. It must be exciting and easily readable for children.
+        4. DESIGN FOR VISUAL LEARNING: This theme is designed for STUDENTS. The content must be of an international standard, competitive with global educational giants, focusing on high-quality, impactful academic language.
+        5. DO NOT use any emojis.
+        6. If writing Islamic greetings (Salam), write it beautifully in Arabic (السَّلَامُ عَلَيْكُمْ), but use it rarely/sparingly.
+        7. Provide content for a physical A4 poster that will be put on a classroom soft board. It must be engaging and easily readable for children.
 
         Return a JSON object with EXACTLY the following keys:
         {
-          "title": "A catchy, beautiful title for the theme (include emojis)",
-          "hook": "Interest builder / attention grabber that excites students (1-2 short paragraphs, use emojis)",
-          "coreConnection": "Core concepts explained simply for students (use bullet points or short paragraphs, use emojis)",
-          "islamicIntegration": "How this relates to Islamic values, Quran/Hadith, explained beautifully for students (1-2 short paragraphs, use emojis)"
+          "title": "A catchy, beautiful title for the theme",
+          "hook": "Interest builder / attention grabber that excites students (1-2 short paragraphs)",
+          "coreConnection": "Core concepts explained simply for students (use bullet points or short paragraphs)",
+          "islamicIntegration": "How this relates to Islamic values, Quran/Hadith, explained beautifully for students (1-2 short paragraphs)"
         }
       `;
 
@@ -89,8 +91,6 @@ export default function SubjectThemeGenerator() {
     try {
       const pageEl = document.getElementById('subject-theme-a4-print');
       if (pageEl) {
-        // Temporarily prepare for PDF capture
-        pageEl.style.display = 'flex';
         
         const canvas = await html2canvas(pageEl, { 
           scale: 2, 
@@ -98,8 +98,6 @@ export default function SubjectThemeGenerator() {
           logging: false 
         });
 
-        pageEl.style.display = 'none';
-        
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -363,7 +361,7 @@ export default function SubjectThemeGenerator() {
           </div>
 
           {/* Hidden Print Container */}
-          <div className="hidden">
+          <div className="absolute left-[-9999px] top-[-9999px]">
             {renderThemeContent('subject-theme-a4-print', true)}
           </div>
         </div>
