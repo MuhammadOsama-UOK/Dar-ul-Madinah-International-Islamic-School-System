@@ -89,31 +89,32 @@ export default function SubjectThemeGenerator() {
 
     setIsDownloading(true);
     try {
-      // Find the preview element
-      const originalEl = document.getElementById('subject-theme-a4-preview');
-      if (originalEl) {
-        // Clone the element to avoid capturing scroll issues or offscreen clipping
-        const cloneEl = originalEl.cloneNode(true) as HTMLElement;
+      // Find the print element which is fully sized and ready
+      const printEl = document.getElementById('subject-theme-a4-print');
+      
+      if (printEl) {
+        // Temporarily bring the hidden print container into the viewport for rendering
+        const originalParent = printEl.parentElement;
+        if (originalParent) {
+            originalParent.classList.remove('hidden');
+            originalParent.classList.remove('absolute', 'left-[-9999px]', 'top-[-9999px]');
+            originalParent.classList.add('absolute', 'top-0', 'left-0', 'z-[-9999]'); // Keep it hidden from user but in flow
+        }
         
-        // Append to body and position it perfectly at top-left but hidden behind everything
-        cloneEl.style.position = 'absolute';
-        cloneEl.style.top = '0';
-        cloneEl.style.left = '0';
-        cloneEl.style.zIndex = '-9999';
-        cloneEl.style.transform = 'none'; // reset any transforms
-        document.body.appendChild(cloneEl);
-        
-        const canvas = await html2canvas(cloneEl, { 
+        const canvas = await html2canvas(printEl, { 
           scale: 2, 
           useCORS: true, 
-          logging: false,
+          logging: true, // Turn on logging to debug if it fails
           allowTaint: true,
-          windowWidth: cloneEl.scrollWidth,
-          windowHeight: cloneEl.scrollHeight
+          windowWidth: 794,
+          windowHeight: 1123
         });
 
-        // Remove the clone after capture
-        document.body.removeChild(cloneEl);
+        // Restore hidden state
+        if (originalParent) {
+            originalParent.classList.add('hidden', 'absolute', 'left-[-9999px]', 'top-[-9999px]');
+            originalParent.classList.remove('top-0', 'left-0', 'z-[-9999]');
+        }
         
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -136,7 +137,7 @@ export default function SubjectThemeGenerator() {
         const dateStr = new Date().toISOString().split('T')[0];
         pdf.save(`Subject_Theme_${safeTopic}_${dateStr}.pdf`);
       } else {
-        alert("Could not find the preview container to generate PDF.");
+        alert("Could not find the print container to generate PDF.");
       }
     } catch (error) {
       console.error("PDF generation failed:", error);
@@ -157,7 +158,7 @@ export default function SubjectThemeGenerator() {
     return (
       <div 
         id={id}
-        className={`bg-white relative flex flex-col ${isPrint ? '' : 'shadow-2xl'}`}
+        className={`relative flex flex-col ${isPrint ? '' : 'shadow-2xl'}`}
         style={{
           width: '794px', // 210mm at 96 DPI
           minHeight: '1123px', // 297mm at 96 DPI
@@ -169,15 +170,15 @@ export default function SubjectThemeGenerator() {
         dir={medium === 'Urdu' ? 'rtl' : 'ltr'}
       >
         {/* Outer Decorative Border - using solid instead of double to prevent html2canvas crashing */}
-        <div className="absolute inset-4 border-[6px] border-solid border-green-800/30 rounded-xl pointer-events-none" />
-        <div className="absolute inset-[22px] border border-solid border-green-800/20 rounded-lg pointer-events-none" />
+        <div className="absolute inset-4 border-[6px] border-solid rounded-xl pointer-events-none" style={{ borderColor: 'rgba(22, 101, 52, 0.3)' }} />
+        <div className="absolute inset-[22px] border border-solid rounded-lg pointer-events-none" style={{ borderColor: 'rgba(22, 101, 52, 0.2)' }} />
 
         {/* Header */}
-        <div className="text-center mb-8 border-b-2 border-green-800 pb-6 relative z-10">
-          <h1 className="text-3xl font-extrabold text-green-900 uppercase tracking-wider font-sans mb-3">
+        <div className="text-center mb-8 border-b-2 pb-6 relative z-10" style={{ borderColor: '#166534' }}>
+          <h1 className="text-3xl font-extrabold uppercase tracking-wider font-sans mb-3" style={{ color: '#14532d' }}>
             {themeContent.title}
           </h1>
-          <div className="flex justify-center gap-8 text-sm font-bold text-gray-600 uppercase font-sans">
+          <div className="flex justify-center gap-8 text-sm font-bold uppercase font-sans" style={{ color: '#4b5563' }}>
             <span>{activeClass.replace('Class ', 'Class: ')}</span>
             <span>Subject: {selectedSubject}</span>
             <span>Topic: {topic}</span>
@@ -188,31 +189,31 @@ export default function SubjectThemeGenerator() {
         <div className="flex-1 flex flex-col gap-8 relative z-10">
           
           {/* Hook Section */}
-          <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 shadow-sm relative">
-            <div className="absolute -top-4 left-6 bg-white px-4 py-1 font-bold text-emerald-800 uppercase text-sm tracking-widest border-2 border-emerald-200 rounded-full font-sans">
+          <div className="p-6 rounded-2xl border shadow-sm relative" style={{ backgroundColor: 'rgba(236, 253, 245, 0.5)', borderColor: '#d1fae5' }}>
+            <div className="absolute -top-4 left-6 px-4 py-1 font-bold uppercase text-sm tracking-widest border-2 rounded-full font-sans" style={{ backgroundColor: '#ffffff', color: '#065f46', borderColor: '#a7f3d0' }}>
               {medium === 'English' ? 'Focus Hook' : 'مرکزی خیال'}
             </div>
-            <p className="text-gray-800 text-xl leading-relaxed whitespace-pre-wrap mt-3">
+            <p className="text-xl leading-relaxed whitespace-pre-wrap mt-3" style={{ color: '#1f2937' }}>
               {themeContent.hook}
             </p>
           </div>
 
           {/* Core Connection */}
-          <div className="p-6 rounded-2xl border border-gray-200 bg-white relative shadow-sm">
-            <div className="absolute -top-4 left-6 bg-white px-4 py-1 font-bold text-blue-800 uppercase text-sm tracking-widest border-2 border-blue-200 rounded-full font-sans">
+          <div className="p-6 rounded-2xl border relative shadow-sm" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}>
+            <div className="absolute -top-4 left-6 px-4 py-1 font-bold uppercase text-sm tracking-widest border-2 rounded-full font-sans" style={{ backgroundColor: '#ffffff', color: '#1e40af', borderColor: '#bfdbfe' }}>
               {medium === 'English' ? 'Core Concept' : 'بنیادی تصور'}
             </div>
-            <p className="text-gray-800 text-xl leading-relaxed whitespace-pre-wrap mt-3">
+            <p className="text-xl leading-relaxed whitespace-pre-wrap mt-3" style={{ color: '#1f2937' }}>
               {themeContent.coreConnection}
             </p>
           </div>
 
           {/* Islamic Integration */}
-          <div className="bg-green-50 p-6 rounded-2xl border border-green-200 shadow-sm relative flex-1">
-            <div className="absolute -top-4 left-6 bg-white px-4 py-1 font-bold text-green-800 uppercase text-sm tracking-widest border-2 border-green-200 rounded-full font-sans">
+          <div className="p-6 rounded-2xl border shadow-sm relative flex-1" style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}>
+            <div className="absolute -top-4 left-6 px-4 py-1 font-bold uppercase text-sm tracking-widest border-2 rounded-full font-sans" style={{ backgroundColor: '#ffffff', color: '#166534', borderColor: '#bbf7d0' }}>
               {medium === 'English' ? 'Islamic Perspective' : 'اسلامی نقطہ نظر'}
             </div>
-            <p className="text-green-950 text-xl leading-relaxed whitespace-pre-wrap mt-3">
+            <p className="text-xl leading-relaxed whitespace-pre-wrap mt-3" style={{ color: '#052e16' }}>
               {themeContent.islamicIntegration}
             </p>
           </div>
@@ -220,12 +221,12 @@ export default function SubjectThemeGenerator() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-green-800/20 text-center relative z-10 flex flex-col items-center gap-2">
-          <div className="text-lg font-bold text-gray-800 font-sans">
+        <div className="mt-8 pt-6 border-t text-center relative z-10 flex flex-col items-center gap-2" style={{ borderColor: 'rgba(22, 101, 52, 0.2)' }}>
+          <div className="text-lg font-bold font-sans" style={{ color: '#1f2937' }}>
             {medium === 'English' ? 'Subject Teacher: ' : 'مضمون کے استاد: '}
-            <span className="text-green-800">{teacherName}</span>
+            <span style={{ color: '#166534' }}>{teacherName}</span>
           </div>
-          <div className="text-sm font-semibold text-gray-500 uppercase tracking-widest font-sans mt-2">
+          <div className="text-sm font-semibold uppercase tracking-widest font-sans mt-2" style={{ color: '#6b7280' }}>
             Dar-ul-Madinah International Islamic School System
           </div>
         </div>
