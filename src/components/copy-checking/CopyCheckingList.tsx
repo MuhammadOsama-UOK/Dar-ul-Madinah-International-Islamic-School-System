@@ -187,7 +187,7 @@ export default function CopyCheckingList() {
       {/* Preview table */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hidden md:block">
         <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-sm font-semibold text-gray-700">
-          Preview for: {selectedClasses[0] || 'No class selected'}
+          Preview for: {selectedClasses[0]?.replace('Class ', 'Class: ') || 'No class selected'}
         </div>
         <table className="w-full text-sm text-left whitespace-nowrap">
           <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
@@ -243,7 +243,7 @@ export default function CopyCheckingList() {
                 <h2 style={{ margin: '5px 0', fontSize: '18px', color: '#334155' }}>Monthly Copy Checking Record</h2>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontWeight: 'bold', fontSize: '14px' }}>
-                <div>Class: {cls} {chunks.length > 1 ? `(Page ${chunkIdx + 1}/${chunks.length})` : ''}</div>
+                <div>Class: {cls.replace('Class ', '')} {chunks.length > 1 ? `(Page ${chunkIdx + 1}/${chunks.length})` : ''}</div>
                 <div>Subject: {selectedSubjectName}</div>
                 <div>Teacher: {teacherName}</div>
               </div>
