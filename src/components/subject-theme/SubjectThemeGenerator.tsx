@@ -89,15 +89,32 @@ export default function SubjectThemeGenerator() {
 
     setIsDownloading(true);
     try {
-      const pageEl = document.getElementById('subject-theme-a4-print');
-      if (pageEl) {
+      // Find the preview element
+      const originalEl = document.getElementById('subject-theme-a4-preview');
+      if (originalEl) {
+        // Clone the element to avoid capturing scroll issues or offscreen clipping
+        const cloneEl = originalEl.cloneNode(true) as HTMLElement;
         
-        const canvas = await html2canvas(pageEl, { 
+        // Append to body and position it perfectly at top-left but hidden behind everything
+        cloneEl.style.position = 'absolute';
+        cloneEl.style.top = '0';
+        cloneEl.style.left = '0';
+        cloneEl.style.zIndex = '-9999';
+        cloneEl.style.transform = 'none'; // reset any transforms
+        document.body.appendChild(cloneEl);
+        
+        const canvas = await html2canvas(cloneEl, { 
           scale: 2, 
           useCORS: true, 
-          logging: false 
+          logging: false,
+          allowTaint: true,
+          windowWidth: cloneEl.scrollWidth,
+          windowHeight: cloneEl.scrollHeight
         });
 
+        // Remove the clone after capture
+        document.body.removeChild(cloneEl);
+        
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -119,7 +136,7 @@ export default function SubjectThemeGenerator() {
         const dateStr = new Date().toISOString().split('T')[0];
         pdf.save(`Subject_Theme_${safeTopic}_${dateStr}.pdf`);
       } else {
-        alert("Could not find the print container element.");
+        alert("Could not find the preview container to generate PDF.");
       }
     } catch (error) {
       console.error("PDF generation failed:", error);
