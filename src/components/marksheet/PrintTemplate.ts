@@ -1,6 +1,6 @@
 import { Student, Subject, ClassName } from '../../types/marksheet';
 
-export function generatePrintHTML(students: Student[], subjects: Subject[], className: ClassName, autoSign: boolean = false): string {
+export function generatePrintHTML(students: Student[], subjects: Subject[], className: ClassName, autoSign: boolean = false, showGrOnPrint: boolean = false): string {
   let html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -153,7 +153,7 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
     
     for (let j = 0; j < 4; j++) {
       if (chunk[j]) {
-        html += generateMarksheet(chunk[j], subjects, className, autoSign);
+        html += generateMarksheet(chunk[j], subjects, className, autoSign, showGrOnPrint);
       } else {
         html += `<div style="visibility: hidden;"></div>`;
       }
@@ -177,7 +177,7 @@ function getRemarks(pct: number): string {
   return "Requires urgent attention and regular study habits.";
 }
 
-function generateMarksheet(student: Student, subjects: Subject[], className: ClassName, autoSign: boolean): string {
+function generateMarksheet(student: Student, subjects: Subject[], className: ClassName, autoSign: boolean, showGrOnPrint: boolean): string {
   const totalMarks = subjects.reduce((sum, sub) => sum + (Number(student.marks[sub.id]) || 0), 0);
   const maxTotal = subjects.reduce((sum, sub) => sum + sub.maxMarks, 0);
   const percentage = maxTotal > 0 ? ((totalMarks / maxTotal) * 100).toFixed(2) : '0.00';
@@ -206,7 +206,7 @@ function generateMarksheet(student: Student, subjects: Subject[], className: Cla
       
       <div class="student-details">
         <div>
-          <strong>GR No:</strong> ${student.grNo || 'N/A'}<br>
+          ${showGrOnPrint ? `<strong>GR No:</strong> ${student.grNo || 'N/A'}<br>` : ''}
           <strong>S.No:</strong> ${student.sNo}
         </div>
         <div>

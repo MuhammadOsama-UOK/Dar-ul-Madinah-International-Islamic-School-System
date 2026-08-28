@@ -90,6 +90,7 @@ export default function MarksheetManager() {
   const [headingClicks, setHeadingClicks] = useState(0);
   const [showMaxMarksConfig, setShowMaxMarksConfig] = useState(false);
   const [autoSign, setAutoSign] = useState(false);
+  const [showGrOnPrint, setShowGrOnPrint] = useState(false);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Entry Mode Logic
@@ -268,7 +269,7 @@ export default function MarksheetManager() {
       return;
     }
 
-    const printHtml = generatePrintHTML(studentsToPrint, currentSubjects, activeClass, autoSign);
+    const printHtml = generatePrintHTML(studentsToPrint, currentSubjects, activeClass, autoSign, showGrOnPrint);
     
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -430,17 +431,31 @@ export default function MarksheetManager() {
               ))}
             </div>
 
-            <div className="mt-4 pt-4 border-t flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="autoSignCheckbox" 
-                checked={autoSign} 
-                onChange={(e) => setAutoSign(e.target.checked)}
-                className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
-              />
-              <label htmlFor="autoSignCheckbox" className="text-sm text-gray-700 font-medium cursor-pointer">
-                Auto Sign Marksheet (Principal Signature)
-              </label>
+            <div className="mt-4 pt-4 border-t flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="autoSignCheckbox" 
+                  checked={autoSign} 
+                  onChange={(e) => setAutoSign(e.target.checked)}
+                  className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                />
+                <label htmlFor="autoSignCheckbox" className="text-sm text-gray-700 font-medium cursor-pointer">
+                  Auto Sign Marksheet (Principal Signature)
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="showGrOnPrintCheckbox" 
+                  checked={showGrOnPrint} 
+                  onChange={(e) => setShowGrOnPrint(e.target.checked)}
+                  className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                />
+                <label htmlFor="showGrOnPrintCheckbox" className="text-sm text-gray-700 font-medium cursor-pointer">
+                  Results with GR
+                </label>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-between items-center border-t pt-4">
