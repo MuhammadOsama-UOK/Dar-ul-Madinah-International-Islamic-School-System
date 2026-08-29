@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ClassName, Student, Subject } from '../../types/marksheet';
 import { DEFAULT_CLASS_SUBJECTS, INITIAL_CLASSES } from '../../data/marksheetData';
 import { INITIAL_STUDENTS } from '../../data/initialStudents';
-import { Save, Printer, Plus, Trash2, Edit2, UploadCloud, CheckCircle2, Settings, Users, BookOpen } from 'lucide-react';
+import { Save, Printer, Plus, Trash2, Edit2, UploadCloud, CheckCircle2, Settings, Users, BookOpen, Download } from 'lucide-react';
 import { generatePrintHTML } from './PrintTemplate';
 import { db, doc, onSnapshot, setDoc } from '../../firebase';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const STORAGE_KEY = 'marksheet_data_v2';
 const SCRIPT_URL_KEY = 'marksheet_script_url';
@@ -91,6 +93,7 @@ export default function MarksheetManager() {
   const [showMaxMarksConfig, setShowMaxMarksConfig] = useState(false);
   const [autoSign, setAutoSign] = useState(false);
   const [showGrOnPrint, setShowGrOnPrint] = useState(false);
+  const [showUploadedMarksOnConsolidated, setShowUploadedMarksOnConsolidated] = useState(false);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Entry Mode Logic
@@ -284,6 +287,122 @@ export default function MarksheetManager() {
     }
   };
 
+  const handleDownloadConsolidated = () => {
+    const pdf = new jsPDF('l', 'mm', 'a4');
+    
+    const head = [
+      [
+        'S.No',
+        'GR No',
+        'Name',
+        'Father Name',
+        ...currentSubjects.map(s => `${s.name} (${s.maxMarks})`),
+        'Total',
+        '%'
+      ]
+    ];
+
+    const body = currentStudents.map((s, index) => {
+      const totalMarks = currentSubjects.reduce((sum, sub) => sum + (Number(s.marks[sub.id]) || 0), 0);
+      const maxTotal = calculateMaxTotal(currentSubjects);
+      const percentage = maxTotal > 0 ? ((totalMarks / maxTotal) * 100).toFixed(2) : '0.00';
+      
+      return [
+        s.sNo,
+        s.grNo || '-',
+        s.name,
+        s.fatherName,
+        ...currentSubjects.map(sub => showUploadedMarksOnConsolidated ? (s.marks[sub.id] ?? '') : ''),
+        showUploadedMarksOnConsolidated ? totalMarks : '',
+        showUploadedMarksOnConsolidated ? percentage : ''
+      ];
+    });
+
+    const pageHeight = pdf.internal.pageSize.height;
+    
+    // Add header text
+    pdf.setFontSize(16);
+    pdf.text(`Dar-ul-Madinah Gulshan BHS - Consolidated Award List`, 14, 15);
+    pdf.setFontSize(12);
+    pdf.text(`Class: ${activeClass}`, 14, 22);
+
+    autoTable(pdf, {
+      head,
+      body,
+      startY: 28,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+      showHead: 'everyPage',
+      margin: { top: 25, bottom: 15 },
+      didDrawPage: function (data) {
+        // Only 15 students per page is requested, but autoTable handles pagination based on page height. 
+        // If we strictly want 15 rows, we could manually chunk the array, but it's usually better to let autotable do it,
+        // or we can force chunking by calling autoTable multiple times. Let's just chunk the body.
+      }
+    });
+
+    // Actually, to force exactly 15 students per page, it's easier to manually slice the body array and loop.
+    // Let's rewrite this part.
+  };
+
+  const handleDownloadConsolidatedStrict = () => {
+    const pdf = new jsPDF('l', 'mm', 'a4');
+    
+    const head = [
+      [
+        'S.No',
+        'GR No',
+        'Name',
+        'Father Name',
+        ...currentSubjects.map(s => `${s.name}\n(${s.maxMarks})`),
+        'Total',
+        '%'
+      ]
+    ];
+
+    const allRows = currentStudents.map((s, index) => {
+      const totalMarks = currentSubjects.reduce((sum, sub) => sum + (Number(s.marks[sub.id]) || 0), 0);
+      const maxTotal = calculateMaxTotal(currentSubjects);
+      const percentage = maxTotal > 0 ? ((totalMarks / maxTotal) * 100).toFixed(2) : '0.00';
+      
+      return [
+        s.sNo,
+        s.grNo || '-',
+        s.name,
+        s.fatherName,
+        ...currentSubjects.map(sub => showUploadedMarksOnConsolidated ? (s.marks[sub.id] ?? '') : ''),
+        showUploadedMarksOnConsolidated ? totalMarks : '',
+        showUploadedMarksOnConsolidated ? percentage : ''
+      ];
+    });
+
+    const rowsPerPage = 15;
+    const totalPages = Math.ceil(allRows.length / rowsPerPage) || 1;
+
+    for (let i = 0; i < totalPages; i++) {
+      if (i > 0) pdf.addPage();
+      
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Dar-ul-Madinah Gulshan BHS - Consolidated Award List - ${activeClass}`, 14, 15);
+      
+      const chunk = allRows.slice(i * rowsPerPage, (i + 1) * rowsPerPage);
+      
+      autoTable(pdf, {
+        head,
+        body: chunk,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+        margin: { top: 20, bottom: 15 }
+      });
+    }
+
+    pdf.save(`Consolidated_Marksheet_${activeClass.replace(/\s+/g, '_')}.pdf`);
+  };
+
   const handleSync = async () => {
     if (!scriptUrl) {
       setShowSettings(true);
@@ -388,6 +507,12 @@ export default function MarksheetManager() {
           </button>
           <div className="flex gap-2">
             <button 
+              onClick={handleDownloadConsolidatedStrict}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+            >
+              <Download size={16} /> Consolidated Marksheet
+            </button>
+            <button 
               onClick={() => handlePrint('all')}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
             >
@@ -454,6 +579,18 @@ export default function MarksheetManager() {
                 />
                 <label htmlFor="showGrOnPrintCheckbox" className="text-sm text-gray-700 font-medium cursor-pointer">
                   Results with GR
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="showUploadedMarksOnConsolidatedCheckbox" 
+                  checked={showUploadedMarksOnConsolidated} 
+                  onChange={(e) => setShowUploadedMarksOnConsolidated(e.target.checked)}
+                  className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                />
+                <label htmlFor="showUploadedMarksOnConsolidatedCheckbox" className="text-sm text-gray-700 font-medium cursor-pointer">
+                  Consolidated with Uploaded Marks
                 </label>
               </div>
             </div>
