@@ -240,7 +240,7 @@ export default function ReinforcementExecution() {
             <input 
               type="text"
               className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm font-medium"
-              placeholder="e.g. Sir Muhammad Hamza / Madam Fatima"
+              placeholder="e.g. Sir Muhammad Hamza"
               value={teacherName}
               onChange={(e) => setTeacherName(e.target.value)}
             />
@@ -284,47 +284,47 @@ export default function ReinforcementExecution() {
         </div>
 
         {/* Nature of Test Keys Info & Quick Preset */}
-        <div className="lg:col-span-6 bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+        <div className="lg:col-span-6 bg-blue-50/60 p-4 rounded-xl border border-blue-100 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-black">Nature of Test Keys Guide</span>
-              <span className="text-[11px] bg-black text-white px-2 py-0.5 rounded font-bold">Max Marks: 10</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-950">Nature of Test Keys Guide</span>
+              <span className="text-[11px] bg-blue-100 text-blue-900 px-2 py-0.5 rounded font-bold">Max Marks: 10</span>
             </div>
             
             <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
-              <div className="bg-white p-2 rounded-lg border-2 border-black shadow-xs">
-                <span className="block font-black text-base text-black">O</span>
-                <span className="text-black font-semibold">Oral Test</span>
+              <div className="bg-white p-2 rounded-lg border border-blue-200 shadow-xs">
+                <span className="block font-black text-base text-blue-700">O</span>
+                <span className="text-slate-600 font-semibold">Oral Test</span>
               </div>
-              <div className="bg-white p-2 rounded-lg border-2 border-black shadow-xs">
-                <span className="block font-black text-base text-black">W</span>
-                <span className="text-black font-semibold">Written Test</span>
+              <div className="bg-white p-2 rounded-lg border border-emerald-200 shadow-xs">
+                <span className="block font-black text-base text-emerald-700">W</span>
+                <span className="text-slate-600 font-semibold">Written Test</span>
               </div>
-              <div className="bg-white p-2 rounded-lg border-2 border-black shadow-xs">
-                <span className="block font-black text-base text-black">B</span>
-                <span className="text-black font-semibold">Board Test</span>
+              <div className="bg-white p-2 rounded-lg border border-purple-200 shadow-xs">
+                <span className="block font-black text-base text-purple-700">B</span>
+                <span className="text-slate-600 font-semibold">Board Test</span>
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-black uppercase tracking-wide mb-1.5">Apply Quick Test Pattern to All 9 Days:</label>
+            <label className="block text-[11px] font-bold text-blue-950 uppercase tracking-wide mb-1.5">Apply Quick Test Pattern to All 9 Days:</label>
             <div className="flex flex-wrap gap-2">
               <button 
                 onClick={() => handleSetAllNature('O')}
-                className="px-2.5 py-1 bg-white border border-black hover:bg-black hover:text-white text-black rounded-lg text-xs font-bold transition-colors"
+                className="px-2.5 py-1 bg-white border border-blue-300 hover:bg-blue-600 hover:text-white text-blue-800 rounded-lg text-xs font-bold transition-colors shadow-2xs"
               >
                 All Oral (O)
               </button>
               <button 
                 onClick={() => handleSetAllNature('W')}
-                className="px-2.5 py-1 bg-white border border-black hover:bg-black hover:text-white text-black rounded-lg text-xs font-bold transition-colors"
+                className="px-2.5 py-1 bg-white border border-emerald-300 hover:bg-emerald-600 hover:text-white text-emerald-800 rounded-lg text-xs font-bold transition-colors shadow-2xs"
               >
                 All Written (W)
               </button>
               <button 
                 onClick={() => handleSetAllNature('B')}
-                className="px-2.5 py-1 bg-white border border-black hover:bg-black hover:text-white text-black rounded-lg text-xs font-bold transition-colors"
+                className="px-2.5 py-1 bg-white border border-purple-300 hover:bg-purple-600 hover:text-white text-purple-800 rounded-lg text-xs font-bold transition-colors shadow-2xs"
               >
                 All Board Test (B)
               </button>
@@ -343,9 +343,9 @@ export default function ReinforcementExecution() {
             {columnsConfig.map((col, idx) => (
               <div 
                 key={col.dayNumber}
-                className="bg-white p-2.5 rounded-xl border border-gray-200 text-center shadow-2xs hover:border-black transition-all"
+                className="bg-white p-2.5 rounded-xl border border-gray-200 text-center shadow-2xs hover:border-blue-300 transition-all"
               >
-                <span className="block text-[11px] font-bold text-black uppercase mb-1">Day {col.dayNumber}</span>
+                <span className="block text-[11px] font-bold text-gray-700 uppercase mb-1">Day {col.dayNumber}</span>
                 <div className="flex justify-center gap-1">
                   {(['O', 'W', 'B'] as NatureOfTestKey[]).map(key => (
                     <button
@@ -353,15 +353,19 @@ export default function ReinforcementExecution() {
                       onClick={() => handleNatureChange(idx, key)}
                       className={`w-7 h-7 rounded-lg text-xs font-extrabold transition-all ${
                         col.natureOfTest === key
-                          ? 'bg-black text-white shadow-xs' 
-                          : 'bg-gray-100 text-black hover:bg-gray-200'
+                          ? key === 'O'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : key === 'W'
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-purple-600 text-white shadow-xs'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
                       {key}
                     </button>
                   ))}
                 </div>
-                <div className="mt-1.5 text-[10px] text-gray-600 font-mono">Max: 10</div>
+                <div className="mt-1.5 text-[10px] text-gray-500 font-mono">Max: 10</div>
               </div>
             ))}
           </div>
@@ -458,16 +462,7 @@ export default function ReinforcementExecution() {
                     </th>
                   ))}
                 </tr>
-                {/* Meta Row 2: Subject */}
-                <tr>
-                  <th colSpan={3} className="border border-black px-2 py-1 text-center font-bold">Subject</th>
-                  {columnsConfig.map((col) => (
-                    <th key={`subj-${col.dayNumber}`} className="border border-black px-0.5 py-1 text-center font-bold text-[10px] truncate max-w-[45px]">
-                      {col.subject || selectedSubjectName}
-                    </th>
-                  ))}
-                </tr>
-                {/* Meta Row 3: Nature of Test */}
+                {/* Meta Row 2: Nature of Test */}
                 <tr className="bg-gray-100">
                   <th colSpan={3} className="border border-black px-2 py-1 text-center font-bold">Nature of Test</th>
                   {columnsConfig.map((col) => (
@@ -476,7 +471,7 @@ export default function ReinforcementExecution() {
                     </th>
                   ))}
                 </tr>
-                {/* Meta Row 4: Max Marks */}
+                {/* Meta Row 3: Max Marks */}
                 <tr>
                   <th colSpan={3} className="border border-black px-2 py-1 text-center font-bold">Max. Marks</th>
                   {columnsConfig.map((col) => (
@@ -600,39 +595,29 @@ export default function ReinforcementExecution() {
                   <thead>
                     {/* Meta 1: Date */}
                     <tr style={{ backgroundColor: '#f0f0f0' }}>
-                      <th colSpan={3} style={{ border: '1.5px solid #000000', padding: '3.5px 4px', fontWeight: 'bold', width: '38%', color: '#000000' }}>Date</th>
+                      <th colSpan={3} style={{ border: '1.5px solid #000000', padding: '4px', fontWeight: 'bold', width: '38%', color: '#000000' }}>Date</th>
                       {columnsConfig.map((col) => (
-                        <th key={`pdf-date-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '3.5px 1px', width: '6.88%', fontSize: '10px', color: '#000000', fontWeight: 'normal', fontFamily: 'Arial, sans-serif' }}>
+                        <th key={`pdf-date-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '4px 1px', width: '6.88%', fontSize: '10px', color: '#000000', fontWeight: 'normal', fontFamily: 'Arial, sans-serif' }}>
                           {col.date || '___/___'}
                         </th>
                       ))}
                     </tr>
 
-                    {/* Meta 2: Subject */}
-                    <tr>
-                      <th colSpan={3} style={{ border: '1.5px solid #000000', padding: '3.5px 4px', fontWeight: 'bold', color: '#000000' }}>Subject</th>
-                      {columnsConfig.map((col) => (
-                        <th key={`pdf-subj-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '3.5px 1px', fontWeight: 'bold', fontSize: '10px', fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-                          {col.subject || selectedSubjectName}
-                        </th>
-                      ))}
-                    </tr>
-
-                    {/* Meta 3: Nature of Test */}
+                    {/* Meta 2: Nature of Test */}
                     <tr style={{ backgroundColor: '#f0f0f0' }}>
-                      <th colSpan={3} style={{ border: '1.5px solid #000000', padding: '3.5px 4px', fontWeight: 'bold', color: '#000000' }}>Nature of Test</th>
+                      <th colSpan={3} style={{ border: '1.5px solid #000000', padding: '4px', fontWeight: 'bold', color: '#000000' }}>Nature of Test</th>
                       {columnsConfig.map((col) => (
-                        <th key={`pdf-nature-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '3.5px 1px', fontWeight: 'bold', fontSize: '12px', fontFamily: 'Arial, sans-serif', color: '#000000' }}>
+                        <th key={`pdf-nature-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '4px 1px', fontWeight: 'bold', fontSize: '12px', fontFamily: 'Arial, sans-serif', color: '#000000' }}>
                           {col.natureOfTest}
                         </th>
                       ))}
                     </tr>
 
-                    {/* Meta 4: Max Marks */}
+                    {/* Meta 3: Max Marks */}
                     <tr>
-                      <th colSpan={3} style={{ border: '1.5px solid #000000', padding: '3.5px 4px', fontWeight: 'bold', color: '#000000' }}>Max. Marks</th>
+                      <th colSpan={3} style={{ border: '1.5px solid #000000', padding: '4px', fontWeight: 'bold', color: '#000000' }}>Max. Marks</th>
                       {columnsConfig.map((col) => (
-                        <th key={`pdf-max-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '3.5px 1px', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#000000' }}>
+                        <th key={`pdf-max-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '4px 1px', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#000000' }}>
                           {col.maxMarks}
                         </th>
                       ))}
@@ -640,11 +625,11 @@ export default function ReinforcementExecution() {
 
                     {/* Header Row */}
                     <tr style={{ backgroundColor: '#e2e2e2', fontWeight: 'bold' }}>
-                      <th style={{ border: '1.5px solid #000000', padding: '4px 2px', width: '5%', color: '#000000' }}>S.N</th>
-                      <th style={{ border: '1.5px solid #000000', padding: '4px 2px', width: '7%', color: '#000000' }}>GR No</th>
-                      <th style={{ border: '1.5px solid #000000', padding: '4px 4px', textAlign: 'left', width: '26%', color: '#000000' }}>Student Name</th>
+                      <th style={{ border: '1.5px solid #000000', padding: '4.5px 2px', width: '5%', color: '#000000' }}>S.N</th>
+                      <th style={{ border: '1.5px solid #000000', padding: '4.5px 2px', width: '7%', color: '#000000' }}>GR No</th>
+                      <th style={{ border: '1.5px solid #000000', padding: '4.5px 4px', textAlign: 'left', width: '26%', color: '#000000' }}>Student Name</th>
                       {columnsConfig.map((col) => (
-                        <th key={`pdf-head-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '4px 1px', width: '6.88%', color: '#000000' }}>
+                        <th key={`pdf-head-${col.dayNumber}`} style={{ border: '1.5px solid #000000', padding: '4.5px 1px', width: '6.88%', color: '#000000' }}>
                           {col.dayNumber}
                         </th>
                       ))}
@@ -655,18 +640,18 @@ export default function ReinforcementExecution() {
                       const absoluteIndex = chunkIdx * studentsPerPage + i;
                       return (
                         <tr key={`pdf-row-${s.id}`}>
-                          <td style={{ border: '1px solid #000000', padding: '5.5px 1px', textAlign: 'center', fontFamily: 'Arial, sans-serif', fontSize: '10.5px', color: '#000000' }}>
+                          <td style={{ border: '1px solid #000000', padding: '6px 1px', textAlign: 'center', fontFamily: 'Arial, sans-serif', fontSize: '10.5px', color: '#000000' }}>
                             {absoluteIndex + 1}
                           </td>
-                          <td style={{ border: '1px solid #000000', padding: '5.5px 1px', textAlign: 'center', fontFamily: 'Arial, sans-serif', color: '#000000', fontSize: '10px' }}>
+                          <td style={{ border: '1px solid #000000', padding: '6px 1px', textAlign: 'center', fontFamily: 'Arial, sans-serif', color: '#000000', fontSize: '10px' }}>
                             {s.grNo}
                           </td>
-                          <td style={{ border: '1px solid #000000', padding: '5.5px 4px', textAlign: 'left', fontFamily: 'Arial, sans-serif' }}>
+                          <td style={{ border: '1px solid #000000', padding: '6px 4px', textAlign: 'left', fontFamily: 'Arial, sans-serif' }}>
                             <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '10.5px', color: '#000000', lineHeight: '1.1' }}>{s.name}</div>
                             {s.fatherName && <div style={{ fontSize: '8.5px', textTransform: 'uppercase', color: '#000000', opacity: 0.9 }}>{s.fatherName}</div>}
                           </td>
                           {columnsConfig.map((col) => (
-                            <td key={`pdf-cell-${s.id}-${col.dayNumber}`} style={{ border: '1px solid #000000', padding: '5.5px 1px', backgroundColor: '#ffffff' }}></td>
+                            <td key={`pdf-cell-${s.id}-${col.dayNumber}`} style={{ border: '1px solid #000000', padding: '6px 1px', backgroundColor: '#ffffff' }}></td>
                           ))}
                         </tr>
                       );
@@ -678,7 +663,7 @@ export default function ReinforcementExecution() {
               {/* Signatures & Footer info at bottom of A4 page */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', paddingTop: '6px', fontSize: '11px', fontWeight: 'bold', borderTop: '1px solid #000000', color: '#000000' }}>
                 <div>Teacher Signature: ______________________</div>
-                <div>Principal / Incharge Signature: ______________________</div>
+                <div>Principal Signature: ______________________</div>
                 <div>Date: ______________________</div>
               </div>
             </div>
