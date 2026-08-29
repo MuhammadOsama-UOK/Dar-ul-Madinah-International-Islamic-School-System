@@ -30,6 +30,7 @@ import html2canvas from 'html2canvas';
 import { GoogleGenAI } from "@google/genai";
 import MarksheetManager from './components/marksheet/MarksheetManager';
 import CopyCheckingList from './components/copy-checking/CopyCheckingList';
+import ReinforcementExecution from './components/reinforcement/ReinforcementExecution';
 import SubjectThemeGenerator from './components/subject-theme/SubjectThemeGenerator';
 import { 
   auth, 
@@ -146,7 +147,7 @@ export default function App() {
   const [allPlans, setAllPlans] = useState<any[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [adminFilterClass, setAdminFilterClass] = useState('');
-  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager' | 'copy-checking-list' | 'subject-theme'>('lesson-planner');
+  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager' | 'copy-checking-list' | 'reinforcement-execution' | 'subject-theme'>('lesson-planner');
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const ADMIN_EMAIL = "osamajafar5070@gmail.com";
@@ -423,28 +424,34 @@ export default function App() {
               </div>
             </div>
             
-            <div className="flex flex-1 md:flex-none items-center justify-center md:justify-start gap-2 bg-slate-100 md:bg-transparent p-1 md:p-0 rounded-lg w-full md:w-auto">
+            <div className="flex flex-1 md:flex-none flex-wrap items-center justify-center md:justify-start gap-1.5 md:gap-2 bg-slate-100 md:bg-transparent p-1 md:p-0 rounded-lg w-full md:w-auto">
               <button 
                 onClick={() => setActiveModule('lesson-planner')}
-                className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'lesson-planner' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'lesson-planner' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Lesson Planner
               </button>
               <button 
                 onClick={() => setActiveModule('marksheet-manager')}
-                className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'marksheet-manager' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'marksheet-manager' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Marksheet Manager
               </button>
               <button 
                 onClick={() => setActiveModule('copy-checking-list')}
-                className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'copy-checking-list' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'copy-checking-list' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Copy Checking List
               </button>
               <button 
+                onClick={() => setActiveModule('reinforcement-execution')}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'reinforcement-execution' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Reinforcement Execution
+              </button>
+              <button 
                 onClick={() => setActiveModule('subject-theme')}
-                className={`flex-1 md:flex-none text-xs md:text-sm font-semibold transition-colors px-3 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'subject-theme' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md ${activeModule === 'subject-theme' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Subject Theme
               </button>
@@ -977,6 +984,10 @@ export default function App() {
       ) : activeModule === 'copy-checking-list' ? (
         <main className="max-w-7xl mx-auto px-4 py-8">
           <CopyCheckingList />
+        </main>
+      ) : activeModule === 'reinforcement-execution' ? (
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <ReinforcementExecution />
         </main>
       ) : (
         <main className="max-w-7xl mx-auto px-4 py-8">

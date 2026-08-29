@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ClassName, Student, Subject } from '../../types/marksheet';
 import { DEFAULT_CLASS_SUBJECTS, INITIAL_CLASSES } from '../../data/marksheetData';
 import { INITIAL_STUDENTS } from '../../data/initialStudents';
-import { Save, Printer, Plus, Trash2, Edit2, UploadCloud, CheckCircle2, Settings, Users, BookOpen, Download } from 'lucide-react';
+import { Save, Printer, Plus, Trash2, Edit2, UploadCloud, CheckCircle2, Users, BookOpen, Download } from 'lucide-react';
 import { generatePrintHTML } from './PrintTemplate';
 import { db, doc, onSnapshot, setDoc } from '../../firebase';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const STORAGE_KEY = 'marksheet_data_v2';
-const SCRIPT_URL_KEY = 'marksheet_script_url';
 const SUBJECT_CONFIG_KEY = 'marksheet_subjects_v2';
 
 export default function MarksheetManager() {
@@ -83,10 +82,14 @@ export default function MarksheetManager() {
   }, []);
   
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
-  const [scriptUrl, setScriptUrl] = useState<string>(() => localStorage.getItem(SCRIPT_URL_KEY) || '');
-  const [showSettings, setShowSettings] = useState(false);
+  
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(0);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadClass, setUploadClass] = useState<ClassName>('Class IV');
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Triple Click Logic
   const [headingClicks, setHeadingClicks] = useState(0);
@@ -403,43 +406,141 @@ export default function MarksheetManager() {
     pdf.save(`Consolidated_Marksheet_${activeClass.replace(/\s+/g, '_')}.pdf`);
   };
 
-  const handleSync = async () => {
-    if (!scriptUrl) {
-      setShowSettings(true);
-      alert('Please set your Google Apps Script Web App URL first.');
-      return;
-    }
+  const handleSync = () => {
+    setUploadClass(activeClass);
+    setShowUploadModal(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     setIsSyncing(true);
+    setSyncProgress(0);
     setSyncStatus(null);
-    try {
-      const exportData = {
-        className: activeClass,
-        subjects: currentSubjects.map(s => s.name),
-        students: currentStudents.map(s => ({
-          grNo: s.grNo,
-          name: s.name,
-          fatherName: s.fatherName,
-          marks: currentSubjects.map(sub => Number(s.marks[sub.id]) || 0),
-          total: calculateTotal(s.marks, currentSubjects),
-          percentage: calculatePercentage(s.marks, currentSubjects)
-        }))
-      };
-
-      await fetch(scriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(exportData)
+    setShowUploadModal(false); // Close the modal if it is open
+    
+    // Start fake progress interval
+    const progressInterval = setInterval(() => {
+      setSyncProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + 5;
       });
-      
-      setSyncStatus('Data synced successfully!');
-      setTimeout(() => setSyncStatus(null), 3000);
-    } catch (e) {
+    }, 600);
+    
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const subjectsForUpload = subjectsConfig[uploadClass] || DEFAULT_CLASS_SUBJECTS[uploadClass] || [];
+          
+          const base64Data = (reader.result as string).split(',')[1];
+          const response = await fetch('/api/extract-marks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pdfBase64: base64Data,
+              subjects: subjectsForUpload.map(s => s.name)
+            })
+          });
+          
+          if (!response.ok) {
+            let errorMsg = 'Failed to extract marks from PDF';
+            try {
+              const errJson = await response.json();
+              if (errJson && errJson.error) errorMsg = errJson.error;
+            } catch {
+              try {
+                const errText = await response.text();
+                if (errText) errorMsg = errText;
+              } catch {}
+            }
+            throw new Error(errorMsg);
+          }
+          
+          setSyncProgress(100);
+          const extractedDataRaw = await response.json();
+          const extractedData = Array.isArray(extractedDataRaw) ? extractedDataRaw : [];
+          
+          if (extractedData.length === 0) {
+            throw new Error("No marks extracted from the document (or format was unrecognized).");
+          }
+          
+          setData((prev: Record<ClassName, Student[]>) => {
+            const classData = [...(prev[uploadClass] || [])];
+            let updatedCount = 0;
+            
+            extractedData.forEach((extractedStudent: any) => {
+              const studentIndex = classData.findIndex(s => {
+                const sGrNo = s.grNo ? String(s.grNo).trim().toLowerCase() : '';
+                const exGrNo = extractedStudent.grNo ? String(extractedStudent.grNo).trim().toLowerCase() : '';
+                
+                const sName = s.name ? String(s.name).trim().toLowerCase() : '';
+                const exName = extractedStudent.name ? String(extractedStudent.name).trim().toLowerCase() : '';
+                
+                return (sGrNo && exGrNo && sGrNo === exGrNo) || (sName && exName && sName === exName);
+              });
+              
+              if (studentIndex !== -1) {
+                const student = classData[studentIndex];
+                const newMarks = { ...student.marks };
+                
+                subjectsForUpload.forEach(sub => {
+                  // The AI might return the mark under exact subject name or slightly trimmed
+                  const targetSubject = sub.name.trim().toLowerCase();
+                  let foundMark = undefined;
+                  
+                  if (extractedStudent.marks) {
+                    for (const key of Object.keys(extractedStudent.marks)) {
+                      if (key.trim().toLowerCase() === targetSubject) {
+                         foundMark = extractedStudent.marks[key];
+                         break;
+                      }
+                    }
+                  }
+                  
+                  if (foundMark !== undefined && foundMark !== null) {
+                    const parsedMark = Number(foundMark);
+                    if (!isNaN(parsedMark)) {
+                      newMarks[sub.id] = parsedMark;
+                    }
+                  }
+                });
+                
+                classData[studentIndex] = { ...student, marks: newMarks };
+                updatedCount++;
+              }
+            });
+            
+            if (updatedCount === 0) {
+              setSyncStatus(`Extraction complete, but no students matched in ${uploadClass}.`);
+            } else {
+              setSyncStatus(`Successfully synced marks for ${updatedCount} student(s) in ${uploadClass}!`);
+            }
+            return { ...prev, [uploadClass]: classData };
+          });
+          
+          setTimeout(() => setSyncStatus(null), 4000);
+        } catch (err: any) {
+          console.error(err);
+          setSyncStatus(`Failed to sync marks: ${err.message || 'Unknown error'}`);
+        } finally {
+          clearInterval(progressInterval);
+          setTimeout(() => {
+            setIsSyncing(false);
+            setSyncProgress(0);
+          }, 500);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (e: any) {
+      clearInterval(progressInterval);
       console.error(e);
-      setSyncStatus('Sync failed. Please check the URL and your network.');
-    } finally {
+      setSyncStatus(`Sync failed: ${e.message || 'Unknown error'}`);
       setIsSyncing(false);
+      setSyncProgress(0);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -490,20 +591,14 @@ export default function MarksheetManager() {
               <BookOpen size={16} /> Subject-wise
             </button>
           </div>
-
-          <button 
-            onClick={() => setShowSettings(!showSettings)}
-            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
-          >
-            <Settings size={16} />
-          </button>
+          
           <button 
             onClick={handleSync}
             disabled={isSyncing}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
           >
             {isSyncing ? <span className="animate-spin text-lg">↻</span> : <UploadCloud size={16} />}
-            Sync
+            Upload Marks PDF
           </button>
           <div className="flex gap-2">
             <button 
@@ -528,6 +623,59 @@ export default function MarksheetManager() {
           </div>
         </div>
       </div>
+
+      {showUploadModal && (
+        <div className="absolute top-0 left-0 right-0 bottom-0 z-50 bg-white/95 backdrop-blur flex items-center justify-center p-4">
+          <div className="bg-white border shadow-2xl rounded-2xl p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4 text-blue-900">Upload PDF Marksheet</h3>
+            <p className="text-sm text-gray-500 mb-6">Select the class this PDF belongs to, then choose the file to upload and extract marks.</p>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Target Class</label>
+              <select
+                value={uploadClass}
+                onChange={(e) => setUploadClass(e.target.value as ClassName)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {INITIAL_CLASSES.map(cls => (
+                  <option key={cls} value={cls}>{cls}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowUploadModal(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              >
+                <UploadCloud size={16} /> Select File
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSyncing && (
+        <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur flex items-center justify-center p-4">
+          <div className="bg-white border shadow-2xl rounded-2xl p-6 w-full max-w-sm text-center">
+            <h3 className="text-xl font-bold mb-2 text-blue-900">Extracting Marks...</h3>
+            <p className="text-sm text-gray-500 mb-6">Our AI is analyzing the document. This may take a moment.</p>
+            <div className="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
+              <div 
+                className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out" 
+                style={{ width: `${syncProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-500 text-right font-medium">{syncProgress}%</p>
+          </div>
+        </div>
+      )}
 
       {showMaxMarksConfig && (
         <div className="absolute top-0 left-0 right-0 bottom-0 z-50 bg-white/95 backdrop-blur flex items-center justify-center p-4">
@@ -621,36 +769,20 @@ export default function MarksheetManager() {
         </div>
       )}
 
-      {showSettings && (
-        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <h3 className="font-semibold text-gray-700 mb-2">Google Sheets Sync Configuration</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            Enter your Google Apps Script Web App URL below. The script should be configured to accept POST requests with JSON payload containing student marks.
-          </p>
-          <div className="flex gap-2">
-            <input 
-              type="text" 
-              value={scriptUrl}
-              onChange={(e) => {
-                setScriptUrl(e.target.value);
-                localStorage.setItem(SCRIPT_URL_KEY, e.target.value);
-              }}
-              placeholder="https://script.google.com/macros/s/AKfycb.../exec"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button onClick={() => setShowSettings(false)} className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700">
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-
       {syncStatus && (
-        <div className="mb-6 p-3 bg-green-50 text-green-700 rounded-lg flex items-center gap-2">
+        <div className="mb-6 p-3 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-2">
           <CheckCircle2 size={18} />
           {syncStatus}
         </div>
       )}
+      
+      <input 
+        type="file" 
+        accept="application/pdf"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileUpload}
+      />
 
       {/* Class Selector */}
       <div className="flex flex-wrap gap-2 mb-6">

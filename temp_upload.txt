@@ -1,0 +1,81 @@
+    setShowUploadModal(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsSyncing(true);
+    setSyncStatus(null);
+    
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = (reader.result as string).split(',')[1];
+          const response = await fetch('/api/extract-marks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pdfBase64: base64Data,
+              subjects: currentSubjects.map(s => s.name)
+            })
+          });
+          
+          if (!response.ok) throw new Error('Failed to extract marks');
+          
+          const extractedData = await response.json();
+          
+          setData((prev: Record<ClassName, Student[]>) => {
+            const classData = [...prev[activeClass]];
+            let updatedCount = 0;
+            
+            extractedData.forEach((extractedStudent: any) => {
+              const studentIndex = classData.findIndex(s => 
+                (extractedStudent.grNo && s.grNo === String(extractedStudent.grNo)) || 
+                (s.name.toLowerCase() === String(extractedStudent.name || '').toLowerCase())
+              );
+              
+              if (studentIndex !== -1) {
+                const student = classData[studentIndex];
+                const newMarks = { ...student.marks };
+                
+                currentSubjects.forEach(sub => {
+                  if (extractedStudent.marks && extractedStudent.marks[sub.name] !== undefined) {
+                    const parsedMark = Number(extractedStudent.marks[sub.name]);
+                    if (!isNaN(parsedMark)) {
+                      newMarks[sub.id] = parsedMark;
+                    }
+                  }
+                });
+                
+                classData[studentIndex] = { ...student, marks: newMarks };
+                updatedCount++;
+              }
+            });
+            
+            setSyncStatus(`Successfully synced marks for ${updatedCount} student(s)!`);
+            return { ...prev, [activeClass]: classData };
+          });
+          
+          setTimeout(() => setSyncStatus(null), 4000);
+        } catch (err) {
+          console.error(err);
+          setSyncStatus('Failed to sync marks. Please try again.');
+        } finally {
+          setIsSyncing(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (e) {
+      console.error(e);
+      setSyncStatus('Sync failed.');
+      setIsSyncing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubjectMarkUpdate = (studentId: string, markValue: string) => {
+    const num = Number(markValue);
+    setData(prev => ({

@@ -1,5 +1,6 @@
 {
   "name": "Dar ul Madinah International Islamic School System Lesson Planner",
-  "description": "Professional lesson planning tool for Dar ul Madinah International Islamic School System. Generate lesson plans in Urdu or English with AI.",
-  "requestFramePermissions": []
+  "description": "Dar ul Madinah Academic Portal - Lesson Planner, Marksheet Manager, Copy Checking List, Reinforcement Execution Record, and Subject Themes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
