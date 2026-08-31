@@ -463,14 +463,12 @@ export default function App() {
               >
                 Classroom Monitoring
               </button>
-              {currentUser?.email === ADMIN_EMAIL && (
-                <button 
-                  onClick={() => setActiveModule('cctv-admin')}
-                  className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md flex items-center gap-1 ${activeModule === 'cctv-admin' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  CCTV Admin
-                </button>
-              )}
+              <button 
+                onClick={() => setActiveModule('cctv-admin')}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md flex items-center gap-1 ${activeModule === 'cctv-admin' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                CCTV Admin
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto justify-end">

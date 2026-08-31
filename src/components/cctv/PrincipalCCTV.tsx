@@ -53,13 +53,25 @@ export default function PrincipalCCTV() {
     };
   }, []);
 
+  // Helper to create a dummy stream for initiating WebRTC calls without a camera
+  const getDummyStream = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      return canvas.captureStream(0);
+    } catch (e) {
+      return new MediaStream();
+    }
+  };
+
   // Connect to active streams
   useEffect(() => {
     if (!peer) return;
 
     activeStreams.forEach(streamInfo => {
       if (!videoRefs.current[streamInfo.id]?.srcObject) {
-        const call = peer.call(streamInfo.peerId, new MediaStream()); // Initiate call
+        const call = peer.call(streamInfo.peerId, getDummyStream()); // Initiate call with safe dummy stream
         call?.on('stream', (remoteStream) => {
           if (videoRefs.current[streamInfo.id]) {
             videoRefs.current[streamInfo.id]!.srcObject = remoteStream;

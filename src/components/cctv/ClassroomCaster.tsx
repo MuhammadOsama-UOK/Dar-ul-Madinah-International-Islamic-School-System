@@ -34,6 +34,25 @@ export default function ClassroomCaster() {
     };
   }, []);
 
+  // Bind video stream when component switches to streaming view
+  useEffect(() => {
+    if (isStreaming && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      
+      const handleLoadedData = () => {
+        detectPose();
+      };
+      
+      videoRef.current.addEventListener('loadeddata', handleLoadedData);
+      
+      return () => {
+        if (videoRef.current) {
+          videoRef.current.removeEventListener('loadeddata', handleLoadedData);
+        }
+      };
+    }
+  }, [isStreaming]);
+
   const initPoseDetection = async () => {
     try {
       await tf.setBackend('webgl');
@@ -66,10 +85,6 @@ export default function ClassroomCaster() {
       }
       
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
 
       // Initialize PeerJS
       const id = `classroom-${classId.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now().toString().slice(-4)}`;
@@ -95,11 +110,6 @@ export default function ClassroomCaster() {
       });
 
       peerRef.current = peer;
-
-      // Start Pose Detection Loop
-      videoRef.current?.addEventListener('loadeddata', () => {
-        detectPose();
-      });
 
     } catch (err) {
       console.error("Failed to start stream:", err);
@@ -300,6 +310,7 @@ export default function ClassroomCaster() {
                 className="w-full h-full object-cover" 
                 playsInline 
                 muted
+                autoPlay
               />
               <canvas 
                 ref={canvasRef} 
