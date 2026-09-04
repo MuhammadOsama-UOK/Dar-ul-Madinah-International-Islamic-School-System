@@ -1,6 +1,6 @@
 {
   "name": "Dar ul Madinah International Islamic School System Lesson Planner",
   "description": "Dar ul Madinah Academic Portal - Lesson Planner, Marksheet Manager, Copy Checking List, Reinforcement Execution Record, and Subject Themes.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["camera", "microphone", "display-capture"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

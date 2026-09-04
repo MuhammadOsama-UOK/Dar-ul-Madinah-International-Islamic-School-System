@@ -22,7 +22,9 @@ import {
   LogIn,
   Shield,
   Search,
-  ArrowLeft
+  ArrowLeft,
+  Radio,
+  Video
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
@@ -149,7 +151,7 @@ export default function App() {
   const [allPlans, setAllPlans] = useState<any[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [adminFilterClass, setAdminFilterClass] = useState('');
-  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager' | 'copy-checking-list' | 'reinforcement-execution' | 'subject-theme' | 'cctv-admin' | 'cctv-caster'>('lesson-planner');
+  const [activeModule, setActiveModule] = useState<'lesson-planner' | 'marksheet-manager' | 'copy-checking-list' | 'reinforcement-execution' | 'subject-theme' | 'live-lectures' | 'lecture-broadcast' | 'cctv-admin' | 'cctv-caster'>('lesson-planner');
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const ADMIN_EMAIL = "osamajafar5070@gmail.com";
@@ -458,16 +460,18 @@ export default function App() {
                 Subject Theme
               </button>
               <button 
-                onClick={() => setActiveModule('cctv-caster')}
-                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md flex items-center gap-1 ${activeModule === 'cctv-caster' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+                onClick={() => setActiveModule('lecture-broadcast')}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md flex items-center gap-1.5 ${activeModule === 'lecture-broadcast' || activeModule === 'cctv-caster' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
               >
-                Classroom Monitoring
+                <Radio size={14} className={activeModule === 'lecture-broadcast' || activeModule === 'cctv-caster' ? 'text-red-500' : 'text-slate-400'} />
+                Lecture Broadcast
               </button>
               <button 
-                onClick={() => setActiveModule('cctv-admin')}
-                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md flex items-center gap-1 ${activeModule === 'cctv-admin' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+                onClick={() => setActiveModule('live-lectures')}
+                className={`text-xs md:text-sm font-semibold transition-colors px-2.5 py-1.5 md:px-0 md:py-0 rounded-md flex items-center gap-1.5 ${activeModule === 'live-lectures' || activeModule === 'cctv-admin' ? 'bg-white md:bg-transparent text-blue-600 shadow-sm md:shadow-none font-bold' : 'text-slate-500 hover:text-slate-700'}`}
               >
-                CCTV Admin
+                <Video size={14} className={activeModule === 'live-lectures' || activeModule === 'cctv-admin' ? 'text-blue-600' : 'text-slate-400'} />
+                Live Lectures
               </button>
             </div>
           </div>
@@ -1007,9 +1011,9 @@ export default function App() {
         <main className="max-w-7xl mx-auto px-4 py-8">
           <SubjectThemeGenerator />
         </main>
-      ) : activeModule === 'cctv-caster' ? (
+      ) : (activeModule === 'lecture-broadcast' || activeModule === 'cctv-caster') ? (
         <main className="max-w-7xl mx-auto px-4 py-8">
-          <ClassroomCaster />
+          <ClassroomCaster currentUser={currentUser} />
         </main>
       ) : (
         <main className="max-w-7xl mx-auto px-4 py-8">
