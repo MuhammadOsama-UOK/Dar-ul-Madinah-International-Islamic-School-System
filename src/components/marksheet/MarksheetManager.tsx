@@ -291,62 +291,7 @@ export default function MarksheetManager() {
   };
 
   const handleDownloadConsolidated = () => {
-    const pdf = new jsPDF('l', 'mm', 'a4');
-    
-    const head = [
-      [
-        'S.No',
-        'GR No',
-        'Name',
-        'Father Name',
-        ...currentSubjects.map(s => `${s.name} (${s.maxMarks})`),
-        'Total',
-        '%'
-      ]
-    ];
-
-    const body = currentStudents.map((s, index) => {
-      const totalMarks = currentSubjects.reduce((sum, sub) => sum + (Number(s.marks[sub.id]) || 0), 0);
-      const maxTotal = calculateMaxTotal(currentSubjects);
-      const percentage = maxTotal > 0 ? ((totalMarks / maxTotal) * 100).toFixed(2) : '0.00';
-      
-      return [
-        s.sNo,
-        s.grNo || '-',
-        s.name,
-        s.fatherName,
-        ...currentSubjects.map(sub => showUploadedMarksOnConsolidated ? (s.marks[sub.id] ?? '') : ''),
-        showUploadedMarksOnConsolidated ? totalMarks : '',
-        showUploadedMarksOnConsolidated ? percentage : ''
-      ];
-    });
-
-    const pageHeight = pdf.internal.pageSize.height;
-    
-    // Add header text
-    pdf.setFontSize(16);
-    pdf.text(`Dar-ul-Madinah Gulshan BHS - Consolidated Award List`, 14, 15);
-    pdf.setFontSize(12);
-    pdf.text(`Class: ${activeClass}`, 14, 22);
-
-    autoTable(pdf, {
-      head,
-      body,
-      startY: 28,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [79, 70, 229], textColor: 255 },
-      showHead: 'everyPage',
-      margin: { top: 25, bottom: 15 },
-      didDrawPage: function (data) {
-        // Only 15 students per page is requested, but autoTable handles pagination based on page height. 
-        // If we strictly want 15 rows, we could manually chunk the array, but it's usually better to let autotable do it,
-        // or we can force chunking by calling autoTable multiple times. Let's just chunk the body.
-      }
-    });
-
-    // Actually, to force exactly 15 students per page, it's easier to manually slice the body array and loop.
-    // Let's rewrite this part.
+    handleDownloadConsolidatedStrict();
   };
 
   const handleDownloadConsolidatedStrict = () => {
@@ -364,7 +309,7 @@ export default function MarksheetManager() {
       ]
     ];
 
-    const allRows = currentStudents.map((s, index) => {
+    const allRows = currentStudents.map((s) => {
       const totalMarks = currentSubjects.reduce((sum, sub) => sum + (Number(s.marks[sub.id]) || 0), 0);
       const maxTotal = calculateMaxTotal(currentSubjects);
       const percentage = maxTotal > 0 ? ((totalMarks / maxTotal) * 100).toFixed(2) : '0.00';
@@ -372,11 +317,11 @@ export default function MarksheetManager() {
       return [
         s.sNo,
         s.grNo || '-',
-        s.name,
-        s.fatherName,
-        ...currentSubjects.map(sub => showUploadedMarksOnConsolidated ? (s.marks[sub.id] ?? '') : ''),
-        showUploadedMarksOnConsolidated ? totalMarks : '',
-        showUploadedMarksOnConsolidated ? percentage : ''
+        s.name.toUpperCase(),
+        s.fatherName.toUpperCase(),
+        ...currentSubjects.map(sub => showUploadedMarksOnConsolidated ? (s.marks[sub.id] ?? '-') : '-'),
+        showUploadedMarksOnConsolidated ? totalMarks : '-',
+        showUploadedMarksOnConsolidated ? `${percentage}%` : '-'
       ];
     });
 
@@ -386,9 +331,16 @@ export default function MarksheetManager() {
     for (let i = 0; i < totalPages; i++) {
       if (i > 0) pdf.addPage();
       
+      // Crisp Black & White Header
+      pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(14);
       pdf.setTextColor(0, 0, 0);
-      pdf.text(`Dar-ul-Madinah Gulshan BHS - Consolidated Award List - ${activeClass}`, 14, 15);
+      pdf.text(`Dar-ul-Madinah Gulshan BHS - Consolidated Award List`, 14, 12);
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Class: ${activeClass}  |  Session: 2025-2026  |  Page ${i + 1} of ${totalPages}  |  Black & White High-Contrast Print`, 14, 17);
       
       const chunk = allRows.slice(i * rowsPerPage, (i + 1) * rowsPerPage);
       
@@ -397,10 +349,62 @@ export default function MarksheetManager() {
         body: chunk,
         startY: 20,
         theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [79, 70, 229], textColor: 255 },
-        margin: { top: 20, bottom: 15 }
+        styles: {
+          fontSize: 8,
+          cellPadding: 2.8,
+          textColor: [0, 0, 0],       // 100% Solid Black
+          lineColor: [0, 0, 0],       // Solid Black Grid Lines (sharp & visible on paper)
+          lineWidth: 0.25,
+          font: 'helvetica'
+        },
+        headStyles: {
+          fillColor: [230, 230, 230], // Light grey tone - preserves high contrast & saves toner
+          textColor: [0, 0, 0],       // Bold Black Text
+          fontStyle: 'bold',
+          lineColor: [0, 0, 0],
+          lineWidth: 0.35,
+          halign: 'center'
+        },
+        alternateRowStyles: {
+          fillColor: [255, 255, 255]  // Crisp pure white
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 12 },
+          1: { halign: 'center', cellWidth: 16 },
+          2: { halign: 'left', fontStyle: 'bold' },
+          3: { halign: 'left' }
+        },
+        didParseCell: (data) => {
+          if (data.section === 'body') {
+            if (data.column.index >= 4) {
+              data.cell.styles.halign = 'center';
+            }
+            // Bold Total and % columns
+            if (data.column.index >= head[0].length - 2) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.textColor = [0, 0, 0];
+            }
+          }
+        },
+        margin: { top: 20, bottom: 20 }
       });
+
+      // Signatures at page bottom for official school records
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.3);
+
+      pdf.line(18, pageHeight - 11, 68, pageHeight - 11);
+      pdf.text('Class Teacher Signature', 22, pageHeight - 7);
+
+      pdf.line(124, pageHeight - 11, 174, pageHeight - 11);
+      pdf.text('Exam Incharge Signature', 126, pageHeight - 7);
+
+      pdf.line(228, pageHeight - 11, 278, pageHeight - 11);
+      pdf.text('Principal Signature', 236, pageHeight - 7);
     }
 
     pdf.save(`Consolidated_Marksheet_${activeClass.replace(/\s+/g, '_')}.pdf`);
@@ -561,14 +565,20 @@ export default function MarksheetManager() {
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <div>
-          <h2 
-            onClick={handleHeadingClick}
-            className="text-2xl font-bold text-gray-800 cursor-pointer select-none"
-            title="Click 3 times to configure Max Marks"
-          >
-            Marksheet Management
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">Dar-ul-Madinah Gulshan BHS - Consolidated Award List</p>
+          <div className="flex items-center gap-2.5">
+            <h2 
+              onClick={handleHeadingClick}
+              className="text-2xl font-bold text-gray-800 cursor-pointer select-none"
+              title="Click 3 times to configure Max Marks"
+            >
+              Marksheet Management
+            </h2>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold text-gray-900 bg-gray-100 border border-gray-400 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-black"></span>
+              B&W Print Ready
+            </span>
+          </div>
+          <p className="text-gray-500 text-sm mt-1">Dar-ul-Madinah Gulshan BHS - Consolidated Award List & Student Marksheets</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -603,22 +613,25 @@ export default function MarksheetManager() {
           <div className="flex gap-2">
             <button 
               onClick={handleDownloadConsolidatedStrict}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+              className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-emerald-700 rounded-lg hover:bg-emerald-800 shadow-sm"
+              title="Download Consolidated Award List as high-contrast Black & White PDF"
             >
-              <Download size={16} /> Consolidated Marksheet
+              <Download size={16} /> Consolidated (B&W PDF)
             </button>
             <button 
               onClick={() => handlePrint('all')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+              className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-black shadow-sm"
+              title="Print all student marksheets in high-contrast Black & White"
             >
-              <Printer size={16} /> Print All
+              <Printer size={16} /> Print All (B&W)
             </button>
             <button 
               onClick={() => handlePrint('selected')}
               disabled={selectedStudents.size === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 disabled:opacity-50"
+              className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-gray-900 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              title="Print selected student marksheets in high-contrast Black & White"
             >
-              <Printer size={16} /> Print ({selectedStudents.size})
+              <Printer size={16} /> Print Selected ({selectedStudents.size})
             </button>
           </div>
         </div>

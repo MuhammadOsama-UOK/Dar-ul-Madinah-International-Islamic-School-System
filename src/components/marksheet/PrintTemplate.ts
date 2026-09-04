@@ -9,116 +9,233 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
       <title>Dar-ul-Madinah_Marksheet_${className.replace(/\s+/g, '_')}</title>
       <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
       <style>
-        @page { size: A3 landscape; margin: 10mm; }
+        @page {
+          size: A3 landscape;
+          margin: 8mm;
+        }
+        * {
+          box-sizing: border-box;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
         body {
           margin: 0;
           padding: 0;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: #fff;
-          color: #000;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+          font-family: 'Segoe UI', Arial, Tahoma, Geneva, Verdana, sans-serif;
+          background: #f1f5f9;
+          color: #000000;
+        }
+        .no-print-bar {
+          background: #111827;
+          color: #ffffff;
+          padding: 12px 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          position: sticky;
+          top: 0;
+          z-index: 1000;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .no-print-bar h2 {
+          margin: 0;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+        .no-print-bar p {
+          margin: 2px 0 0;
+          font-size: 12px;
+          color: #9ca3af;
+        }
+        .btn-print {
+          background: #ffffff;
+          color: #000000;
+          border: none;
+          font-weight: 800;
+          font-size: 13px;
+          padding: 8px 18px;
+          border-radius: 6px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          transition: all 0.2s;
+        }
+        .btn-print:hover {
+          background: #e5e7eb;
+          transform: translateY(-1px);
+        }
+        .btn-close {
+          background: transparent;
+          color: #d1d5db;
+          border: 1px solid #4b5563;
+          font-weight: 600;
+          font-size: 13px;
+          padding: 8px 14px;
+          border-radius: 6px;
+          cursor: pointer;
+          margin-left: 8px;
+        }
+        .btn-close:hover {
+          background: #374151;
+          color: #fff;
+        }
+        .pages-container {
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
         }
         .page {
-          width: 100%;
-          height: 277mm; /* A3 landscape height ~297mm minus margins */
+          width: 404mm; /* A3 landscape width 420mm - 16mm margins */
+          min-height: 281mm; /* A3 landscape height 297mm - 16mm margins */
+          max-height: 281mm;
           display: grid;
           grid-template-columns: 1fr 1fr;
           grid-template-rows: 1fr 1fr;
-          gap: 10mm;
+          gap: 8mm;
           page-break-after: always;
+          break-after: page;
           box-sizing: border-box;
+          background: #ffffff;
+          padding: 6mm;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .page:last-child {
           page-break-after: auto;
+          break-after: auto;
         }
         .marksheet-card {
-          border: 2px solid #1e3a8a; /* Deep blue border */
-          padding: 15px;
+          border: 2.5px solid #000000;
+          outline: 1px solid #000000;
+          outline-offset: -5px;
+          padding: 12px 14px;
           box-sizing: border-box;
-          border-radius: 12px;
+          border-radius: 2px;
           display: flex;
           flex-direction: column;
-          background-color: #f8fafc;
+          background-color: #ffffff;
           position: relative;
+          page-break-inside: avoid;
+          break-inside: avoid;
         }
         .header {
           text-align: center;
-          margin-bottom: 15px;
-          border-bottom: 2px solid #e2e8f0;
-          padding-bottom: 10px;
+          margin-bottom: 8px;
+          border-bottom: 2px solid #000000;
+          padding-bottom: 6px;
         }
         .header h1 {
           margin: 0;
-          font-size: 24px;
-          color: #1e3a8a;
+          font-size: 20px;
+          font-weight: 900;
+          color: #000000;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 1.5px;
         }
         .header h2 {
-          margin: 5px 0 0;
-          font-size: 16px;
-          color: #475569;
-          font-weight: 600;
+          margin: 3px 0 0;
+          font-size: 13.5px;
+          color: #000000;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .student-details {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 15px;
-          font-size: 14px;
-          color: #334155;
-          background: #fff;
-          padding: 10px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
+          align-items: center;
+          margin-bottom: 8px;
+          font-size: 12.5px;
+          color: #000000;
+          background: #ffffff;
+          padding: 6px 10px;
+          border-radius: 2px;
+          border: 1.5px solid #000000;
+          line-height: 1.45;
         }
-        .student-details > div {
-          flex: 1;
+        .student-details strong {
+          color: #000000;
+          font-weight: 800;
+        }
+        .grade-badge {
+          display: inline-block;
+          border: 1.5px solid #000000;
+          padding: 0 6px;
+          font-weight: 900;
+          font-size: 14px;
+          margin-left: 4px;
+          background: #f0f0f0;
         }
         .marks-table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           flex-grow: 1;
-          background: #fff;
+          background: #ffffff;
+          border: 1.5px solid #000000;
         }
         .marks-table th, .marks-table td {
-          border: 1px solid #cbd5e1;
-          padding: 8px 4px;
+          border: 1.5px solid #000000;
+          padding: 5px 3px;
           text-align: center;
-          font-size: 12px;
+          font-size: 11.5px;
+          color: #000000;
         }
         .marks-table th {
-          background-color: #f1f5f9 !important;
-          color: #0f172a;
-          font-weight: bold;
+          background-color: #f0f0f0 !important;
+          color: #000000 !important;
+          font-weight: 900;
           text-transform: uppercase;
           font-size: 11px;
+          letter-spacing: 0.2px;
+        }
+        .marks-table td.subject-label {
+          text-align: left;
+          padding-left: 6px;
+          font-weight: 800;
+        }
+        .marks-table td.mark-cell {
+          font-weight: 700;
+          font-size: 12px;
         }
         .marks-table tr.total-row td {
-          background-color: #e0f2fe !important;
-          font-weight: bold;
-          color: #0369a1;
+          background-color: #f0f0f0 !important;
+          font-weight: 900;
+          color: #000000 !important;
+          font-size: 12.5px;
+          border-top: 2.5px solid #000000;
         }
         .remarks {
           text-align: center;
           font-style: italic;
-          font-weight: 600;
-          color: #1e3a8a;
-          font-size: 13px;
-          padding: 8px;
-          background-color: #e0f2fe;
-          border-radius: 6px;
-          margin-bottom: 15px;
+          font-weight: 700;
+          color: #000000;
+          font-size: 12px;
+          padding: 6px 10px;
+          background-color: #ffffff;
+          border: 1.5px solid #000000;
+          border-radius: 2px;
+          margin-bottom: 8px;
+        }
+        .remarks strong {
+          font-style: normal;
+          font-weight: 900;
+          color: #000000;
+          margin-right: 4px;
         }
         .footer {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
           margin-top: auto;
-          font-size: 12px;
-          color: #64748b;
-          padding-top: 10px;
+          font-size: 11.5px;
+          color: #000000;
+          padding-top: 4px;
+          font-weight: 800;
         }
         .signature-box {
           display: flex;
@@ -128,23 +245,92 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
         }
         .principal-sig {
           font-family: 'Dancing Script', cursive;
-          font-size: 28px;
-          color: #1e3a8a;
-          margin-bottom: -5px; /* Pull closer to the line */
+          font-size: 26px;
+          color: #000000;
+          font-weight: 900;
+          margin-bottom: -5px;
         }
         .signature-line {
-          border-top: 1px solid #64748b;
+          border-top: 1.5px solid #000000;
           width: 100%;
           text-align: center;
-          padding-top: 4px;
-          margin-top: 25px; /* Space for manual signature if needed */
+          padding-top: 3px;
+          margin-top: 22px;
+          color: #000000;
+          font-weight: 800;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .signature-line.with-sig {
           margin-top: 0;
         }
+
+        /* PRINT MEDIA OVERRIDES - PURE SOLID BLACK INK FOR B&W PRINTERS */
+        @media print {
+          .no-print-bar {
+            display: none !important;
+          }
+          body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .pages-container {
+            padding: 0 !important;
+            gap: 0 !important;
+          }
+          .page {
+            width: 100% !important;
+            height: 100% !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            page-break-after: always !important;
+            break-after: page !important;
+          }
+          .page:last-child {
+            page-break-after: auto !important;
+            break-after: auto !important;
+          }
+          * {
+            color: #000000 !important;
+            border-color: #000000 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+          }
+          .marksheet-card {
+            border: 2.5px solid #000000 !important;
+            outline: 1px solid #000000 !important;
+            background: #ffffff !important;
+          }
+          .marks-table th, .marks-table tr.total-row td {
+            background-color: #f0f0f0 !important;
+            color: #000000 !important;
+          }
+          .signature-line {
+            border-top: 1.5px solid #000000 !important;
+          }
+        }
       </style>
     </head>
     <body>
+      <div class="no-print-bar">
+        <div>
+          <h2>DAR-UL-MADINAH MARKSHEETS — BLACK & WHITE PRINT READY</h2>
+          <p>Optimized for sharp black laser/inkjet printing • A3 Landscape (4 marksheets per page)</p>
+        </div>
+        <div>
+          <button class="btn-print" onclick="window.print()">
+            🖨️ Print / Save as PDF
+          </button>
+          <button class="btn-close" onclick="window.close()">
+            Close
+          </button>
+        </div>
+      </div>
+
+      <div class="pages-container">
   `;
 
   for (let i = 0; i < students.length; i += 4) {
@@ -162,6 +348,7 @@ export function generatePrintHTML(students: Student[], subjects: Subject[], clas
   }
 
   html += `
+      </div>
     </body>
     </html>
   `;
@@ -194,8 +381,12 @@ function generateMarksheet(student: Student, subjects: Subject[], className: Cla
   const remarks = getRemarks(pct);
 
   let subjectHeaders = subjects.map(s => `<th>${s.name}</th>`).join('');
-  let subjectMarks = subjects.map(s => `<td>${student.marks[s.id] ?? '-'}</td>`).join('');
-  let subjectMax = subjects.map(s => `<td>${s.maxMarks}</td>`).join('');
+  let subjectMarks = subjects.map(s => {
+    const m = student.marks[s.id];
+    const val = (m !== undefined && m !== null && String(m).trim() !== '') ? m : '-';
+    return `<td class="mark-cell">${val}</td>`;
+  }).join('');
+  let subjectMax = subjects.map(s => `<td class="mark-cell">${s.maxMarks}</td>`).join('');
 
   return `
     <div class="marksheet-card">
@@ -206,49 +397,49 @@ function generateMarksheet(student: Student, subjects: Subject[], className: Cla
       
       <div class="student-details">
         <div>
-          ${showGrOnPrint ? `<strong>GR No:</strong> ${student.grNo || 'N/A'}<br>` : ''}
-          <strong>S.No:</strong> ${student.sNo}
+          ${showGrOnPrint ? `<strong>GR No:</strong> <span>${student.grNo || 'N/A'}</span><br>` : ''}
+          <strong>S.No:</strong> <span>${student.sNo}</span>
         </div>
         <div>
-          <strong>Name:</strong> ${student.name.toUpperCase()}<br>
-          <strong>Father:</strong> ${student.fatherName.toUpperCase()}
+          <strong>Name:</strong> <span>${student.name.toUpperCase()}</span><br>
+          <strong>Father:</strong> <span>${student.fatherName.toUpperCase()}</span>
         </div>
         <div style="text-align: right;">
-          <strong>Grade:</strong> <span style="color: #0369a1; font-size: 16px;">${grade}</span><br>
-          <strong>Percentage:</strong> ${percentage}%
+          <strong>Grade:</strong> <span class="grade-badge">${grade}</span><br>
+          <strong>Percentage:</strong> <strong>${percentage}%</strong>
         </div>
       </div>
 
       <table class="marks-table">
         <thead>
           <tr>
-            <th>Subject</th>
+            <th class="subject-label" style="width: 22%;">Subject</th>
             ${subjectHeaders}
-            <th>Total</th>
+            <th style="width: 12%;">Total</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Max Marks</strong></td>
+            <td class="subject-label">Max Marks</td>
             ${subjectMax}
-            <td><strong>${maxTotal}</strong></td>
+            <td class="mark-cell"><strong>${maxTotal}</strong></td>
           </tr>
           <tr class="total-row">
-            <td>Obtained</td>
+            <td class="subject-label">Obtained</td>
             ${subjectMarks}
-            <td>${totalMarks}</td>
+            <td class="mark-cell" style="font-size: 13.5px;">${totalMarks}</td>
           </tr>
         </tbody>
       </table>
 
-      <div class="remarks">Remarks: "${remarks}"</div>
+      <div class="remarks"><strong>Remarks:</strong> &ldquo;${remarks}&rdquo;</div>
 
       <div class="footer">
         <div class="signature-box">
           <div class="signature-line">Class Teacher</div>
         </div>
         <div class="signature-box">
-          ${autoSign ? `<div class="principal-sig">Muneer Riaz</div>` : `<div style="height: 28px;"></div>`}
+          ${autoSign ? `<div class="principal-sig">Muneer Riaz</div>` : `<div style="height: 26px;"></div>`}
           <div class="signature-line ${autoSign ? 'with-sig' : ''}">Principal</div>
         </div>
       </div>
